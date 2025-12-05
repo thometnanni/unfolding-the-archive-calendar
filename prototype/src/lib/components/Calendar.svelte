@@ -4,16 +4,11 @@
   import { filesize } from 'filesize'
   import { bounceIn } from 'svelte/easing'
 
-
-
-
-  // let { data } = $props()
-
+  
+  let { zoom } = $props()
   let data = $derived($page.data.project)
 
-
-  let { hash } = $props()
-
+  // $effect(() => console.log(zoom))
 
   const files = $derived(
     data.files
@@ -48,7 +43,8 @@
   const maxDay = $derived(Math.max(...days))
   const diffDay = $derived(maxDay - minDay)
 
-  let innerChartWidth = $derived(chartWidth - paddingLeft - paddingRight)
+  let innerChartWidth = $derived(Math.max(chartWidth - paddingLeft - paddingRight, 0))
+
 
   let binWidth = $derived(innerChartWidth / (24 / xBinSize) - 1 - itemGap * 2)
 
@@ -396,13 +392,12 @@
 			</div>
 		{:else}
 			<div class="info tiny">
-				The calendar list all files of the <em>{hash}</em> project by their creation time of day (horizontal)
-				and date (vertical). Creation dates may directly reflect a persons action (i.e., starting and
-				saving a new architectural drawing) but can also stem from automations and batch actions (i.e.
-				exporting renderings and copying files) and can in some case be incorrect or altered.
+				The calendar list all files of the project by their creation time of day (horizontal) and
+				date (vertical). Creation dates may directly reflect a persons action (i.e., starting and
+				saving a new architectural drawing) but can also stem from automations and batch actions
+				(i.e. exporting renderings and copying files) and can in some case be incorrect or altered.
 			</div>
 		{/if}
-		<h1>{hash}</h1>
 	</div>
 </div>
 
