@@ -6,7 +6,7 @@ import { statSync } from "node:fs";
 
 const options = {
   inputDir: getArgValue("-i", "Please specify an input directory"),
-  outputDir: getArgValue("-o") ?? "../output",
+  outputDir: getArgValue("-o") ?? "../prototype/static/projects",
   batch: getArgValue("--batch"),
 };
 

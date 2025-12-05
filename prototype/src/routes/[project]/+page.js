@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 
 export async function load({ params, fetch }) {
-	const res = await fetch(`data/${params.project}`);
+	const res = await fetch(`projects/${params.project}.json`);
 
 	if (!res.ok) {
 		throw error(res.status, {
@@ -11,6 +11,5 @@ export async function load({ params, fetch }) {
 
 	const project = await res.json();
 
-	console.log(project);
 	return { project };
 }

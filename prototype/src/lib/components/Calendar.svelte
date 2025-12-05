@@ -1,11 +1,22 @@
 <script>
+	import { page } from '$app/stores';
   import { scaleLinear } from 'd3-scale'
+  import { filesize } from 'filesize'
+  import { bounceIn } from 'svelte/easing'
 
-  let { data } = $props()
+
+
+
+  // let { data } = $props()
+
+  let data = $derived($page.data.project)
+
+
+  let { hash } = $props()
+
 
   const files = $derived(
-    data
-      .filter(({ isFile }) => isFile)
+    data.files
       .map((file) => {
         const date = new Date(file.birthtime)
         const seconds =
@@ -20,43 +31,36 @@
       })
   )
 
-  const yBinSize = 1
   const xBinSize = 1
+  let chartWidth = $state(0)
 
-  let chartHeight = $state(0)
-
-  // let chartWidth = $state(0)
-
-  let axisWidth = 50
+  let axisHeight = 16
   let paddingTop = 50
-  let paddingBottom = 50
-  let paddingRight = 50
-  let paddingLeft = 50
+  let paddingBottom = 25
+  let paddingRight = 25
+  let paddingLeft = 25
+
+  const itemHeight = 1
+  const itemGap = 2
 
   const days = $derived(files.map(({ day }) => day))
   const minDay = $derived(Math.min(...days))
   const maxDay = $derived(Math.max(...days))
   const diffDay = $derived(maxDay - minDay)
 
-  let innerChartHeight = $derived(chartHeight - paddingTop - paddingBottom)
-  // let innerChartWidth = $derived(
-  //   chartWidth - paddingLeft - paddingRight - axisWidth
-  // )
+  let innerChartWidth = $derived(chartWidth - paddingLeft - paddingRight)
 
-  let binHeight = $derived(innerChartHeight / (24 / yBinSize) - 3)
+  let binWidth = $derived(innerChartWidth / (24 / xBinSize) - 1 - itemGap * 2)
 
-  const scaleY = $derived(
-    scaleLinear().domain([0, 24]).range([0, innerChartHeight])
+  const scaleX = $derived(
+    scaleLinear().domain([0, 24]).range([0, innerChartWidth])
   )
-  // const scaleX = $derived(
-  //   scaleLinear().domain([minDay, maxDay]).range([0, innerChartWidth])
-  // )
 
   const maxInactiveDays = 3
 
-  let xBins = $derived(
+  let yBins = $derived(
     '-'
-      .repeat(diffDay + 1)
+      .repeat(diffDay)
       .split('-')
       .map((_, tick) => {
         const day = tick + minDay
@@ -74,129 +78,126 @@
         const label = isFirstOfMonth && `${month} ${isFirstOfYear ? year : ''}`
         // const x = scaleX(tick + minDay)
 
-        let yBins = {}
+        let xBins = {}
         // const yBinCount = 24 / yBinSize
         files
           .filter((file) => day === file.day)
           .forEach((file) => {
-            const yBin = Math.floor(file.hours / yBinSize)
+            const xBin = Math.floor(file.hours / xBinSize)
             // if (yBins == null) yBins = {}
-            if (yBins[yBin] == null) yBins[yBin] = []
-            yBins[yBin].push(file)
+            if (xBins[xBin] == null) xBins[xBin] = []
+            xBins[xBin].push(file)
           })
 
-        const yBinsTidy = Object.entries(yBins).map(([yBin, files]) => ({
-          yBin,
-          y: scaleY(+yBin * yBinSize),
-          files
+        const xBinsTidy = Object.entries(xBins).map(([xBin, files]) => ({
+          xBin,
+          x: scaleX(+xBin * xBinSize),
+          files: files.sort((a, b) => a.birthtime - b.birthtime)
+          // .sort(
+          //   (a, b) => fileTypes.indexOf(a.type) - fileTypes.indexOf(b.type)
+          // )
         }))
 
         const maxFiles = Math.max(
-          ...yBinsTidy.map(({ files }) => files.length),
+          ...xBinsTidy.map(({ files }) => files.length),
           0
         )
 
         return {
-          yBins: yBinsTidy,
+          xBins: xBinsTidy,
           maxFiles,
+          date,
           scale: {
             value: tick,
             label,
             opacity: isFirstOfWeek ? 0.05 : 0.05
             // x
           },
-          tick
+          tick,
+          isFirst: day === minDay,
+          isLast: day === maxDay
         }
       })
-      .map((xBin, i, xBins) => {
-        const next = xBins
-          .slice(i + 1)
-          .findIndex(({ yBins }) => yBins.length > 0)
-
-        // const prevNext = xBins[i-1]?.next
+      .map((yBin, i, yBins) => {
+        const remainingBins = yBins.slice(i + 1)
+        const next = remainingBins.findIndex(({ xBins }) => xBins.length > 0)
 
         return {
           next,
-          ...xBin
+          nextDate: remainingBins[next]?.date,
+          ...yBin
         }
       })
-      // .map((xBin, i, xBins) => {
-      //   const prevNext = xBins[i - 1]?.next
-      //   const gap = prevNext > xBin.next ? prevNext : xBin.next
+      .filter(({ next, xBins }, i, yBins) => {
+        if (xBins.length > 0) return true
 
-      //   return {
-      //     gap,
-      //     ...xBin
-      //   }
-      // })
-      .filter(({ next, yBins }, i, xBins) => {
-        if (yBins.length > 0) return true
-
-        const before = xBins
+        const before = yBins
           .slice(i - maxInactiveDays - 1, i)
           .map(({ next }) => next)
-        const after = xBins
+        const after = yBins
           .slice(i, i + maxInactiveDays)
           .map(({ next }) => next)
 
         if (
-          // i <= maxInactiveDays ||
-          i === xBins.length - 1 ||
+          i === yBins.length - 1 ||
           (before.includes(0) &&
             after.includes(0) &&
             !before.includes(maxInactiveDays + 1))
         )
           return true
       })
-      .map((xBin) => {
-        const width = Math.max(xBin.maxFiles * 2 + 2, 10) //+ (xBin.next > maxInactiveDays ? 20 : 0)
-        const fullWidth = width + (xBin.next > maxInactiveDays ? 40 : 0)
-        return { ...xBin, width, fullWidth }
+      .map((yBin) => {
+        const height =
+          Math.max(yBin.maxFiles, 1) * (itemGap + itemHeight) + 1 + itemGap
+        const fullHeight = height + (yBin.next > maxInactiveDays ? 40 : 0)
+        return { ...yBin, height, fullHeight }
       })
-      .map((xBin, i, xBins) => {
-        const before = xBins.slice(0, i)
+      .map((yBin, i, yBins) => {
+        const before = yBins.slice(0, i)
 
-        const x = before.reduce((prev, curr) => prev + curr.fullWidth, 0)
-        return { ...xBin, x: x }
+        const y = before.reduce((prev, curr) => prev + curr.fullHeight, 0)
+        return { ...yBin, y }
       })
   )
 
-  $effect(() => console.log(xBins))
+  const firstInactivePeriod = $derived(
+    yBins.findIndex(({ next }) => next > maxInactiveDays)
+  )
 
   const fileTypes = ['drawing', 'image', 'document', 'other']
 
   const getColorFromFileType = (fileType) => {
     switch (fileType) {
       case 'drawing':
-        return '#228F66'
+        return '#27D5C6'
       case 'image':
-        return '#C26FC2'
+        return '#EA6CEA'
       case 'document':
         return '#F0BD65'
       default:
-        return '#9595A3'
+        return '#4A4D5F'
     }
   }
 
-  let innerChartWidth = $derived(
-    xBins[xBins.length - 1].x + xBins[xBins.length - 1].width
+  let innerChartHeight = $derived(
+    yBins[yBins.length - 1].y + yBins[yBins.length - 1].height
   )
 
-  let chartWidth = $derived(
-    innerChartWidth + paddingLeft + paddingRight + axisWidth
+  let chartHeight = $derived(
+    innerChartHeight + paddingTop + paddingBottom + axisHeight
   )
 
-  const labeledTicks = [0, 6, 12, 18, 24]
-  let yTicks = $derived(
+  const labeledTicks = [4, 8, 12, 16, 20]
+  let xTicks = $derived(
     '-'
       .repeat(24)
       .split('-')
       .map((_, tick) => {
-        const y = scaleY(tick)
+        const x = scaleX(tick)
         return {
           value: tick,
           showLabel: labeledTicks.includes(tick),
-          y
+          x
         }
       })
   )
@@ -204,136 +205,335 @@
   function formatHour(hour) {
     return `${hour < 10 ? '0' : ''}${hour.toFixed()}:00`
   }
+
+  function formatDays(d) {
+    return `${d} days`
+  }
+
+  let selectedFile= $state(null)
+  let selectedFileLocked = $state(false)
+  function inspectFile(file, lock) {
+    if (selectedFileLocked && !lock) return
+    selectedFile = file
+    if (lock) {
+      selectedFileLocked = true
+    }
+  }
+  function clearFile(removeLock) {
+    if (selectedFileLocked && !removeLock) return
+    selectedFileLocked = false
+    selectedFile = null
+  }
 </script>
 
 <div class="scroll-container">
-	<svg
-		height="100%"
-		width={chartWidth}
-		bind:clientWidth={chartWidth}
-		bind:clientHeight={chartHeight}
-	>
-		<g transform="translate({paddingLeft},{paddingTop})">
-			{#each yTicks as tick}
-				<g transform="translate(0,{tick.y})" class="text-xs opacity-70">
-					<line
-						x1={axisWidth}
-						x2={axisWidth + innerChartWidth}
-						y1="0"
-						y2="0"
-						stroke="black"
-						opacity={tick.showLabel ? 0.1 : 0.05}
-					/>
-
+	<svg class="axis-labels" height="60" width="100%" bind:clientWidth={chartWidth}>
+		<g transform="translate({paddingLeft},{paddingTop})" class="time-axis">
+			{#each xTicks as tick}
+				<g transform="translate({tick.x},0)">
 					{#if tick.showLabel}
-						<text x="" text-anchor="start" dominant-baseline="middle" class="fill-current">
+						<rect fill="white" width="44" height="18" x="-22" y="-13.5"></rect>
+						<text x="" text-anchor="middle" class="fill-current tiny">
 							{formatHour(tick.value)}
 						</text>
 					{/if}
 				</g>
 			{/each}
 		</g>
+	</svg>
 
-		<g transform="translate({paddingLeft + axisWidth},{paddingTop})">
-			{#each xBins as xBin}
-				<g transform="translate({xBin.x},0)" class="text-xs opacity-70">
-					<line
-						x1="0"
-						x2="0"
-						y1="0"
-						y2={innerChartHeight}
-						stroke={xBin.yBins.length > 0 ? 'black' : 'black'}
-						opacity={xBin.scale.opacity}
-					/>
-
-					{#if xBin.scale.label}
-						<text x="" text-anchor="start" dominant-baseline="middle" class="fill-current">
-							{xBin.scale.label}
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+	<svg
+		height={chartHeight}
+		width="100%"
+		bind:clientWidth={chartWidth}
+		onclick={() => clearFile(true)}
+		role="img"
+		class="visualisation"
+	>
+		<g transform="translate({paddingLeft},{paddingTop})">
+			{#each xTicks as tick}
+				<g transform="translate({tick.x},0)">
+					{#if tick.value === 0}
+						<rect fill="white" width="42" height="18" x="-2" y="-13"></rect>
+						<text x="" text-anchor="start" class="fill-current tiny">
+							<!-- {formatHour(tick.value)} -->
+							time of day →
 						</text>
 					{/if}
+					<line
+						y1={axisHeight}
+						y2={axisHeight + innerChartHeight}
+						class={['grid-line', tick.value % 4 === 0 ? 'heavy' : '']}
+					/>
 				</g>
 			{/each}
 		</g>
-		<g transform="translate({paddingLeft + axisWidth}, {paddingTop})">
-			<!-- {#each files as file}
-      <circle
-        cx={scaleX(file.day)}
-        cy={scaleY(file.hours)}
-        r="2.5"
-        opacity="0.05"
-        fill={getColorFromFileType(file.type!)}
-      />
-    {/each} -->
+		<g transform="translate({paddingLeft}, {paddingTop + axisHeight})">
+			{#each yBins as yBin, index}
+				<g transform="translate(0,{yBin.y})" class="y-bin">
+					<line x1={innerChartWidth} class="grid-line" />
 
-			{#each xBins as xBin}
-				<g transform="translate({xBin.x},0)" class="x-bin">
-					{#if xBin.next > maxInactiveDays}
-						<g transform="translate({xBin.width},0)">
-							<line y1="0" y2={innerChartHeight} stroke="black" opacity="0.05"> </line>
-							<rect width="38" fill="white" height={innerChartHeight + 2} x="1" y="-1"></rect>
+					{#if yBin.next > maxInactiveDays}
+						<g transform="translate(0,{yBin.height})">
+							<line x1={innerChartWidth} class="grid-line" />
+							<rect height="39" fill="white" width={innerChartWidth + 2} y="0.5" x="-1"></rect>
+							<text y="20" x={0} text-anchor="start" dominant-baseline="middle" class="tiny">
+								{formatDays(yBin.next)}
+								{#if index === firstInactivePeriod}
+									of inactivity
+								{/if}
+							</text>
 							<text
-								x="20"
-								y={innerChartHeight / 2}
-								text-anchor="middle"
+								y="20"
+								x={innerChartWidth}
+								text-anchor="end"
 								dominant-baseline="middle"
-								style="font-size: 12px">{xBin.next}</text
+								class="tiny"
 							>
+								{#if index === firstInactivePeriod}
+									next file created on
+								{/if}
+								{yBin.nextDate.toDateString().replace(/^.{3} /, '')}
+							</text>
 						</g>
 					{/if}
-					{#each xBin.yBins as yBin}
-						<g transform="translate(0,{yBin.y})" class="y-bin">
-							{#each yBin.files as file, index}
-								<g transform="translate({2 + index * 2},2)" class="file">
-									<line y2={binHeight} stroke={getColorFromFileType(file.type)}></line>
+					{#if yBin.isFirst}
+						<g transform="translate(0,{yBin.height})">
+							<text
+								y="-32"
+								x={innerChartWidth}
+								text-anchor="end"
+								dominant-baseline="middle"
+								class="tiny"
+							>
+								{yBin.date.toDateString().replace(/^.{3} /, '')}
+							</text>
+						</g>
+					{/if}
+					{#if yBin.isLast}
+						<g transform="translate(0,{yBin.height})">
+							<text
+								y="20"
+								x={innerChartWidth}
+								text-anchor="end"
+								dominant-baseline="middle"
+								class="tiny"
+							>
+								last file created on {yBin.date.toDateString().replace(/^.{3} /, '')}
+							</text>
+						</g>
+					{/if}
+					{#each yBin.xBins as xBin}
+						<g transform="translate({xBin.x},0)" class="y-bin">
+							{#each xBin.files as file, index}
+								<g
+									transform="translate({0.5 + itemGap},{0.5 +
+										itemGap +
+										itemHeight * 0.5 +
+										index * (itemGap + itemHeight)})"
+									class="file"
+								>
+									<line
+										x2={binWidth}
+										stroke-width={itemHeight}
+										stroke={getColorFromFileType(file.type)}
+									></line>
+									<line
+										class="interactive-layer"
+										x2={binWidth}
+										stroke-width={itemHeight + itemGap}
+										role="presentation"
+										stroke={getColorFromFileType(file.type)}
+										onmouseenter={() => inspectFile(file, false)}
+										onclick={(e) => {
+											e.stopPropagation();
+											inspectFile(file, true);
+										}}
+										style={file.path === selectedFile?.path ? 'opacity:1;' : ''}
+										onmouseleave={() => clearFile()}
+									></line>
 								</g>
 							{/each}
 						</g>
 					{/each}
 				</g>
 			{/each}
+
+			<line x1={innerChartWidth} class="grid-line" transform="translate(0,{innerChartHeight})" />
 		</g>
 	</svg>
 	<div class="key">
-		{#each fileTypes as fileType}
-			<div class="item">
-				<div class="rect" style="background:{getColorFromFileType(fileType)}"></div>
-				{fileType}
+		<div class="top">
+			<div class="types">
+				{#each fileTypes as fileType}
+					<div
+						class="item tiny"
+						style="background:{getColorFromFileType(fileType)};opacity:{selectedFile == null ||
+						selectedFile.type === fileType ||
+						(fileType === 'other' && !fileTypes.includes(selectedFile.type))
+							? 1
+							: 0.1}"
+					>
+						{fileType}
+					</div>
+				{/each}
 			</div>
-		{/each}
+
+			{#if selectedFile != null && selectedFileLocked}
+				<button class="item tiny close" onclick={() => clearFile(true)}> ✕ </button>
+			{/if}
+		</div>
+		{#if selectedFile != null}
+			<div class="file-details tiny">
+				<div>
+					<span class="light">{selectedFile.parent}/</span>{selectedFile.name}
+				</div>
+
+				<div>{selectedFile.date.toString().replace(/ GMT.*$/, '')}</div>
+				<div>{filesize(selectedFile.fileSize)}</div>
+			</div>
+		{:else}
+			<div class="info tiny">
+				The calendar list all files of the <em>{hash}</em> project by their creation time of day (horizontal)
+				and date (vertical). Creation dates may directly reflect a persons action (i.e., starting and
+				saving a new architectural drawing) but can also stem from automations and batch actions (i.e.
+				exporting renderings and copying files) and can in some case be incorrect or altered.
+			</div>
+		{/if}
+		<h1>{hash}</h1>
 	</div>
 </div>
 
 <style>
+  :global(html) {
+    --grey-1: #d3d3d3;
+    --grey-2: #929292;
+    --grey-3: #f0f0f0;
+    --highlight: rgb(254, 255, 190);
+    /* font-size: 13px; */
+  }
+
+  h1 {
+    color: black;
+    max-width: 950px;
+    font-size: 2.8rem;
+    line-height: 0.95;
+    font-weight: normal;
+    margin: 0 0;
+  }
+
   .scroll-container {
     position: relative;
-    overflow-x: auto;
+    overflow-y: auto;
     flex: 1;
-    width: 100%;
-    display: flex;
-    flex-direction: column; /* or 100% */
-    /* optional: white-space: nowrap; */
+    height: 100%;
+    flex-direction: row;
   }
   svg {
     display: block;
+
+    .grid-line {
+      stroke: var(--grey-3);
+      mix-blend-mode: darken;
+
+      &.heavy {
+        stroke: var(--grey-1);
+      }
+    }
+
+    text {
+      fill: var(--grey-2);
+    }
+    .time-axis {
+      text {
+        fill: white;
+      }
+      rect {
+        fill: var(--grey-2);
+      }
+    }
+
+    .interactive-layer {
+      pointer-events: all;
+      opacity: 0;
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  .axis-labels {
+    position: sticky;
+    top: 0;
+    margin-bottom: -60px;
+  }
+
+  .visualisation {
+    pointer-events: all;
+  }
+
+  .tiny {
+    font-size: 13px;
+  }
+
+  .info {
+    /* font-size: 13px; */
+    max-width: 850px;
   }
 
   .key {
-    left: 0;
+    pointer-events: none;
     position: sticky;
-    padding: 0 50px 25px 50px;
-
+    bottom: 0;
+    left: 0;
+    background: white;
+    padding: 25px 25px 10px 25px;
     display: flex;
-    gap: 18px;
-    font-size: 14px;
+    gap: 6px;
+    flex-direction: column;
 
+    > * {
+      pointer-events: all;
+    }
+
+    .top {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    button {
+      appearance: none;
+      outline: none;
+      border: none;
+    }
+
+    .types {
+      display: flex;
+      gap: 12px;
+      font-size: 14px;
+      flex-wrap: wrap;
+    }
     .item {
       display: flex;
       gap: 6px;
+      padding: 0px 5px;
       align-items: center;
-      .rect {
-        width: 14px;
-        height: 8px;
-      }
+      position: relative;
+
+      color: white;
+    }
+
+    .close {
+      background: #6389b5;
+    }
+
+    .file-details,
+    .info {
+      margin: 0.5rem 0;
+      color: var(--grey-2);
     }
   }
 </style>
