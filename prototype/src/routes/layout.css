@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+@font-face {
+	font-family: Ronzino;
+	src: url('$lib/assets/Ronzino-Regular.woff2');
+	font-weight: normal;
+}
+
+@font-face {
+	font-family: Ronzino;
+	src: url('$lib/assets/Ronzino-Oblique.woff2');
+	font-style: italic;
+}
+
+:root {
+	font-family: Ronzino;
+}
