@@ -38,15 +38,20 @@ function getFiles(dir) {
       const path = join(parentPath, name);
 
       const ext = name.match(/.([^.]+)$/)?.[1].toLowerCase();
+      const birthtime = statSync(path).birthtimeMs;
 
+      const date = new Date(birthtime);
       return {
         name,
         path: normalize(path.replace(dir, ".")),
         fileSize: statSync(path).size,
-        birthtime: statSync(path).birthtimeMs,
+        birthtime,
         type: file_types[ext],
+        hour: date.getHours(),
+        date: date.toISOString().replace(/T.*/, ""),
       };
-    });
+    })
+    .sort((a, b) => a.birthtime - b.birthtime);
 
   return files;
 }
@@ -75,8 +80,8 @@ async function preprocess() {
   console.log(
     `exported ${
       options.batch
-        ? `${directories[0].name}.json`
-        : `${directories.length} files`
+        ? `${directories.length} files`
+        : `${directories[0].name}.json`
     }`
   );
 }
