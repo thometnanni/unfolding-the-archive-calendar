@@ -3,7 +3,6 @@
 	import { getColorFromFileType, isSameBin, lerp, timeBetween } from '$lib/helper';
 	import { scaleLinear } from 'd3-scale';
 	import { filesize } from 'filesize';
-	import { bounceIn } from 'svelte/easing';
 
 	let { zoom } = $props();
 	let data = $derived($page.data.project);
@@ -17,19 +16,14 @@
 		left: 25
 	};
 
-	// $effect(() => console.log(zoom));
+	const strokeWidth = 1;
+	const itemGap = 2;
+	const itemHeight = 4;
 
 	let chartWidth = $derived(svgWidth - margin.left - margin.right);
 	let columnWidth = $derived(chartWidth / 24);
-	let strokeWidth = 1;
-	let itemGap = 2;
-	let itemHeight = 4;
+
 	let columnInnerWidth = $derived(columnWidth - strokeWidth - itemGap * 2);
-
-	let itemWidthScale = $derived(scaleLinear([2, 3], [4, columnInnerWidth]).clamp(true));
-
-	// let itemWidth = $derived(itemWidthScale(zoom));
-	let itemWidth = 4;
 
 	let binConfig = $derived({
 		all: { itemWidth: 4 },
@@ -44,7 +38,6 @@
 	}));
 
 	let vis = $derived.by(() => {
-		console.log('computing');
 		if (svgWidth == null) return;
 		const files = $page.data.project.files;
 		const items = [];
@@ -55,7 +48,7 @@
 			day: []
 		};
 
-		let rollingY = {
+		let maxY = {
 			all: 0,
 			year: 0,
 			month: 0,
@@ -63,7 +56,7 @@
 		};
 
 		files.forEach((file, index) => {
-			const previous = items.at(-1) ?? { x: 0, y: 0, localX: 0, file: {} };
+			const previous = items.at(-1);
 
 			const item = { file };
 
@@ -72,31 +65,22 @@
 				const itemColumnWidth = itemsPerColumn * (itemWidth + itemGap) - itemGap;
 				const columnOffset = (columnWidth - itemColumnWidth) / 2;
 
-				const sameBin = isSameBin(previous.file.date, file.date, bin);
-				const sameHour = previous.file.hour === file.hour;
+				const sameBin = isSameBin(previous?.file.date, file.date, bin);
+				const sameHour = previous?.file.hour === file.hour;
 
-				const previousOfSameHour = items.findLast((i) => i.file.hour === file.hour) ?? {
-					x: 0,
-					y: 0,
-					localX: 0,
-					file: {}
-				};
-				const previousOfSameHourInSameBin = isSameBin(previousOfSameHour.file.date, file.date, bin);
+				const previousOfSameHour = items.findLast((i) => i.file.hour === file.hour);
+				const previousOfSameHourInSameBin = isSameBin(
+					previousOfSameHour?.file.date,
+					file.date,
+					bin
+				);
 
 				let x = 0;
 				let y = 0;
 				let localX = null;
 
-				if (sameBin && sameHour) {
-					if (file.hour === 6 && bin === 'year') console.log(1);
-					localX = (previous.bins[bin].localX ?? columnOffset) + itemWidth + itemGap;
-					const newLine = localX + itemWidth + itemGap > columnWidth;
-					if (newLine) localX = columnOffset;
-
-					x = file.hour * columnWidth + localX;
-					y = newLine ? previous.bins[bin].y + itemHeight + itemGap : previous.bins[bin].y;
-				} else if (previousOfSameHourInSameBin) {
-					localX = (previousOfSameHour?.bins[bin].localX ?? columnOffset) + itemWidth + itemGap;
+				if (previousOfSameHourInSameBin) {
+					localX = (previousOfSameHour.bins[bin].localX ?? columnOffset) + itemWidth + itemGap;
 					const newLine = localX + itemWidth + itemGap > columnWidth;
 					if (newLine) localX = columnOffset;
 
@@ -105,11 +89,11 @@
 						? previousOfSameHour.bins[bin].y + itemHeight + itemGap
 						: previousOfSameHour.bins[bin].y;
 				} else {
-					const between = timeBetween(previous.file.date, file.date);
+					const between = timeBetween(previous?.file.date, file.date);
 					if (between?.[bin]) {
 						for (let i = 0; i < between?.[bin]; i++) {
 							const previousBinY = bins[bin].at(-1)?.y ?? 0;
-							const previousItemY = rollingY[bin] + itemHeight;
+							const previousItemY = maxY[bin] + itemHeight;
 
 							bins[bin].push({
 								y: Math.max(previousBinY, previousItemY) + strokeWidth + itemGap
@@ -121,7 +105,7 @@
 					y = (bins[bin].at(-1)?.y ?? 0) + itemGap + strokeWidth;
 				}
 
-				rollingY[bin] = Math.max(rollingY[bin], y);
+				maxY[bin] = Math.max(maxY[bin], y);
 
 				return [bin, { x, y, localX, width: itemWidth }];
 			});
@@ -135,7 +119,7 @@
 		return {
 			items,
 			bins,
-			height: rollingY
+			height: maxY
 		};
 	});
 
