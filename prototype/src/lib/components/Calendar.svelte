@@ -26,10 +26,10 @@
 	let columnInnerWidth = $derived(columnWidth - strokeWidth - itemGap * 2)
 
 	let binConfig = $derived({
-		all: { itemWidth: 4 },
-		year: { itemWidth: 4 },
-		month: { itemWidth: columnInnerWidth },
-		day: { itemWidth: columnInnerWidth }
+		all: { itemWidth: 8 },
+		year: { itemWidth: 16 },
+		month: {},
+		day: {}
 	})
 	let binning = $derived.by(() => ({
 		current: Object.keys(binConfig)[Math.floor(zoom) - 1],
@@ -56,36 +56,31 @@
 		}
 
 		files.forEach((file, index) => {
-			const previous = items.at(-1)
-
-			const item = { file }
-
-			const itemBins = Object.entries(binConfig).map(([bin, { itemWidth }]) => {
-				const itemsPerColumn = Math.floor((columnInnerWidth + itemGap) / (itemWidth + itemGap))
-				const itemColumnWidth = itemsPerColumn * (itemWidth + itemGap) - itemGap
-				const columnOffset = (columnWidth - itemColumnWidth) / 2
-
-				const sameBin = isSameBin(previous?.file.date, file.date, bin)
-				const sameHour = previous?.file.hour === file.hour
-
-				const previousOfSameHour = items.findLast((i) => i.file.hour === file.hour)
-				const previousOfSameHourInSameBin = isSameBin(previousOfSameHour?.file.date, file.date, bin)
+			const itemBins = Object.entries(binConfig).map(([bin, { itemWidth: desiredItemWidth }]) => {
+				let itemWidth = columnInnerWidth
+				if (desiredItemWidth && desiredItemWidth < columnInnerWidth) {
+					const itemsPerColumn = Math.floor(
+						(columnInnerWidth + itemGap) / (desiredItemWidth + itemGap)
+					)
+					itemWidth = (columnInnerWidth + itemGap) / itemsPerColumn - itemGap
+				}
 
 				let x = 0
 				let y = 0
 				let localX = null
 
-				if (previousOfSameHourInSameBin) {
-					localX = (previousOfSameHour.bins[bin].localX ?? columnOffset) + itemWidth + itemGap
+				const previousItem = items.findLast((i) => i.file.hour === file.hour)
+				const sameBin = isSameBin(previousItem?.file.date, file.date, bin)
+
+				if (sameBin) {
+					localX = (previousItem.bins[bin].localX ?? itemGap) + itemWidth + itemGap
 					const newLine = localX + itemWidth + itemGap > columnWidth
-					if (newLine) localX = columnOffset
+					if (newLine) localX = itemGap
 
 					x = file.hour * columnWidth + localX
-					y = newLine
-						? previousOfSameHour.bins[bin].y + itemHeight + itemGap
-						: previousOfSameHour.bins[bin].y
+					y = newLine ? previousItem.bins[bin].y + itemHeight + itemGap : previousItem.bins[bin].y
 				} else {
-					const between = timeBetween(previous?.file.date, file.date)
+					const between = timeBetween(items.at(-1)?.file.date, file.date)
 					if (between?.[bin]) {
 						for (let i = 0; i < between?.[bin]; i++) {
 							const previousBinY = bins[bin].at(-1)?.y ?? 0
@@ -97,7 +92,7 @@
 						}
 					}
 
-					x = file.hour * columnWidth + columnOffset
+					x = file.hour * columnWidth + itemGap
 					y = (bins[bin].at(-1)?.y ?? 0) + itemGap + strokeWidth
 				}
 
@@ -106,11 +101,11 @@
 				return [bin, { x, y, localX, width: itemWidth }]
 			})
 
-			item.bins = Object.fromEntries(itemBins)
-
-			item.color = getColorFromFileType(file.type)
-			item.index = index
-			items.push(item)
+			items.push({
+				file,
+				bins: Object.fromEntries(itemBins),
+				color: getColorFromFileType(file.type)
+			})
 		})
 		return {
 			items,
@@ -142,7 +137,7 @@
 
 	let columns = $derived(
 		Array.from({ length: 25 }, (_, i) => ({
-			x: i * columnWidth
+			x: i * columnWidth - strokeWidth / 2
 		}))
 	)
 
