@@ -1,81 +1,81 @@
 <script>
-	let { children } = $props();
+	let { children } = $props()
 
-	import { zoom } from 'd3-zoom';
-	import { select } from 'd3-selection';
-	import { onMount } from 'svelte';
+	import { zoom } from 'd3-zoom'
+	import { select } from 'd3-selection'
+	import { onMount } from 'svelte'
 
-	let container;
-	let zoomBehavior;
+	let container
+	let zoomBehavior
 
-	let scale = $state(1);
+	let scale = $state(1)
 
-	const MIN_SCALE = 1;
-	const MAX_SCALE = 4;
-	const SNAP_DURATION = 300; // ms
-	const SNAP_EPS = 0.01;
+	const MIN_SCALE = 1
+	const MAX_SCALE = 4
+	const SNAP_DURATION = 300 // ms
+	const SNAP_EPS = 0.01
 
 	onMount(() => {
-		const selection = select(container);
+		const selection = select(container)
 		zoomBehavior = zoom()
 			.scaleExtent([MIN_SCALE, MAX_SCALE])
 			.on('zoom', (event) => {
-				scale = event.transform.k;
+				scale = event.transform.k
 			})
 			.on('end', (event) => {
 				// Only snap after user-initiated interaction (sourceEvent is set)
-				if (!event.sourceEvent) return;
+				if (!event.sourceEvent) return
 
-				const current = event.transform.k;
-				const rounded = Math.round(current);
+				const current = event.transform.k
+				const rounded = Math.round(current)
 				// If already near an integer, do nothing
-				if (Math.abs(rounded - current) <= SNAP_EPS) return;
+				if (Math.abs(rounded - current) <= SNAP_EPS) return
 
 				select(container)
 					.transition()
 					.duration(SNAP_DURATION)
-					.call(zoomBehavior.scaleTo, clamp(rounded, MIN_SCALE, MAX_SCALE));
+					.call(zoomBehavior.scaleTo, clamp(rounded, MIN_SCALE, MAX_SCALE))
 			})
 			.filter(({ type, ctrlKey, shiftKey, altKey, touches }) => {
 				switch (type) {
 					case 'wheel':
-						return ctrlKey || shiftKey || altKey;
+						return ctrlKey || shiftKey || altKey
 					case 'touchmove':
 					case 'touchstart':
-						return touches && touches.length === 2;
+						return touches && touches.length === 2
 				}
-			});
+			})
 
-		selection.call(zoomBehavior);
+		selection.call(zoomBehavior)
 
 		return () => {
-			selection.on('.zoom', null);
-		};
-	});
+			selection.on('.zoom', null)
+		}
+	})
 
 	function clamp(v, a, b) {
-		return Math.max(a, Math.min(b, v));
+		return Math.max(a, Math.min(b, v))
 	}
 
 	function setScale(e) {
-		const newScale = +e.target.value;
-		scale = newScale;
+		const newScale = +e.target.value
+		scale = newScale
 
 		// Immediately set zoom to the selected value while dragging
 		if (zoomBehavior && container) {
-			select(container).call(zoomBehavior.scaleTo, clamp(newScale, MIN_SCALE, MAX_SCALE));
+			select(container).call(zoomBehavior.scaleTo, clamp(newScale, MIN_SCALE, MAX_SCALE))
 		}
 	}
 
 	function snapScale() {
 		// Snap to nearest integer when slider is released
-		const rounded = Math.round(scale);
-		if (Math.abs(rounded - scale) <= SNAP_EPS) return;
+		const rounded = Math.round(scale)
+		if (Math.abs(rounded - scale) <= SNAP_EPS) return
 
 		select(container)
 			.transition()
 			.duration(SNAP_DURATION)
-			.call(zoomBehavior.scaleTo, clamp(rounded, MIN_SCALE, MAX_SCALE));
+			.call(zoomBehavior.scaleTo, clamp(rounded, MIN_SCALE, MAX_SCALE))
 	}
 </script>
 

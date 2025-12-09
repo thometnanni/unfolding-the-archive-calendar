@@ -13,73 +13,73 @@
  * reports positive distances.
  */
 export function timeBetween(startStr, endStr) {
-	if (startStr == null || endStr == null) return;
+	if (startStr == null || endStr == null) return
 	// -----------------------------------------------------------------
 	// 1️⃣ Normalise both inputs to UTC midnight dates
 	// -----------------------------------------------------------------
-	const toUtcMidnight = (s) => new Date(`${s}T00:00:00Z`);
-	let start = toUtcMidnight(startStr);
-	let end = toUtcMidnight(endStr);
+	const toUtcMidnight = (s) => new Date(`${s}T00:00:00Z`)
+	let start = toUtcMidnight(startStr)
+	let end = toUtcMidnight(endStr)
 
 	// -----------------------------------------------------------------
 	// 2️⃣ If the caller gave them in reverse order, flip them.
 	// -----------------------------------------------------------------
 	if (end < start) {
-		const tmp = start;
-		start = end;
-		end = tmp;
+		const tmp = start
+		start = end
+		end = tmp
 	}
 
 	// -----------------------------------------------------------------
 	// 3️⃣ Days – simple millisecond arithmetic
 	// -----------------------------------------------------------------
-	const MS_PER_DAY = 24 * 60 * 60 * 1000;
-	const day = Math.round((end - start) / MS_PER_DAY);
+	const MS_PER_DAY = 24 * 60 * 60 * 1000
+	const day = Math.round((end - start) / MS_PER_DAY)
 
 	// -----------------------------------------------------------------
 	// 4️⃣ Pull out the individual calendar components (UTC!)
 	// -----------------------------------------------------------------
-	const sY = start.getUTCFullYear();
-	const sM = start.getUTCMonth(); // 0‑based (Jan = 0)
-	const eY = end.getUTCFullYear();
-	const eM = end.getUTCMonth();
+	const sY = start.getUTCFullYear()
+	const sM = start.getUTCMonth() // 0‑based (Jan = 0)
+	const eY = end.getUTCFullYear()
+	const eM = end.getUTCMonth()
 
 	// -----------------------------------------------------------------
 	// 5️⃣ Months – count every month boundary that is crossed.
 	//    This is simply the raw month distance, no day‑adjustment.
 	// -----------------------------------------------------------------
-	const month = (eY - sY) * 12 + (eM - sM);
+	const month = (eY - sY) * 12 + (eM - sM)
 
 	// -----------------------------------------------------------------
 	// 6️⃣ Years – count every year boundary that is crossed.
 	// -----------------------------------------------------------------
-	const year = eY - sY;
+	const year = eY - sY
 
 	// -----------------------------------------------------------------
 	// 7️⃣ Return the three independent totals
 	// -----------------------------------------------------------------
-	return { day, month, year };
+	return { day, month, year }
 }
 
 export function getColorFromFileType(fileType) {
 	switch (fileType) {
 		case 'drawing':
-			return '#27D5C6';
+			return '#27D5C6'
 		case 'image':
-			return '#EA6CEA';
+			return '#EA6CEA'
 		case 'document':
-			return '#F0BD65';
+			return '#F0BD65'
 		default:
-			return '#4A4D5F';
+			return '#4A4D5F'
 	}
 }
 
 export function isSameBin(d1, d2, granularity) {
-	if (d1 == null || d2 == null) return false;
-	if (granularity === 'all') return true;
-	if (granularity === 'year') return d1.replace(/-.*/, '') === d2.replace(/-.*/, '');
-	if (granularity === 'month') return d1.replace(/-.{2}$/, '') === d2.replace(/-.{2}$/, '');
-	return d1 === d2;
+	if (d1 == null || d2 == null) return false
+	if (granularity === 'all') return true
+	if (granularity === 'year') return d1.replace(/-.*/, '') === d2.replace(/-.*/, '')
+	if (granularity === 'month') return d1.replace(/-.{2}$/, '') === d2.replace(/-.{2}$/, '')
+	return d1 === d2
 }
 
 /**
@@ -91,5 +91,5 @@ export function isSameBin(d1, d2, granularity) {
  * @returns {number} The interpolated value.
  */
 export function lerp(a, b, t) {
-	return a + (b - a) * t;
+	return a + (b - a) * t
 }

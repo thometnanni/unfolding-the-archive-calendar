@@ -1,154 +1,150 @@
 <script>
-	import { page } from '$app/stores';
-	import { getColorFromFileType, isSameBin, lerp, timeBetween } from '$lib/helper';
-	import { scaleLinear } from 'd3-scale';
-	import { filesize } from 'filesize';
+	import { page } from '$app/stores'
+	import { getColorFromFileType, isSameBin, lerp, timeBetween } from '$lib/helper'
+	import { scaleLinear } from 'd3-scale'
+	import { filesize } from 'filesize'
 
-	let { zoom } = $props();
-	let data = $derived($page.data.project);
+	let { zoom } = $props()
+	let data = $derived($page.data.project)
 
-	let svgWidth = $state();
+	let svgWidth = $state()
 
 	const margin = {
 		top: 50,
 		right: 25,
 		bottom: 25,
 		left: 25
-	};
+	}
 
-	const strokeWidth = 1;
-	const itemGap = 2;
-	const itemHeight = 4;
+	const strokeWidth = 1
+	const itemGap = 2
+	const itemHeight = 4
 
-	let chartWidth = $derived(svgWidth - margin.left - margin.right);
-	let columnWidth = $derived(chartWidth / 24);
+	let chartWidth = $derived(svgWidth - margin.left - margin.right)
+	let columnWidth = $derived(chartWidth / 24)
 
-	let columnInnerWidth = $derived(columnWidth - strokeWidth - itemGap * 2);
+	let columnInnerWidth = $derived(columnWidth - strokeWidth - itemGap * 2)
 
 	let binConfig = $derived({
 		all: { itemWidth: 4 },
 		year: { itemWidth: 4 },
 		month: { itemWidth: columnInnerWidth },
 		day: { itemWidth: columnInnerWidth }
-	});
+	})
 	let binning = $derived.by(() => ({
 		current: Object.keys(binConfig)[Math.floor(zoom) - 1],
 		next: Object.keys(binConfig)[Math.min(Math.floor(zoom), 3)],
 		progress: zoom % 1
-	}));
+	}))
 
 	let vis = $derived.by(() => {
-		if (svgWidth == null) return;
-		const files = $page.data.project.files;
-		const items = [];
+		if (svgWidth == null) return
+		const files = $page.data.project.files
+		const items = []
 		const bins = {
 			all: [],
 			year: [],
 			month: [],
 			day: []
-		};
+		}
 
 		let maxY = {
 			all: 0,
 			year: 0,
 			month: 0,
 			day: 0
-		};
+		}
 
 		files.forEach((file, index) => {
-			const previous = items.at(-1);
+			const previous = items.at(-1)
 
-			const item = { file };
+			const item = { file }
 
 			const itemBins = Object.entries(binConfig).map(([bin, { itemWidth }]) => {
-				const itemsPerColumn = Math.floor((columnInnerWidth + itemGap) / (itemWidth + itemGap));
-				const itemColumnWidth = itemsPerColumn * (itemWidth + itemGap) - itemGap;
-				const columnOffset = (columnWidth - itemColumnWidth) / 2;
+				const itemsPerColumn = Math.floor((columnInnerWidth + itemGap) / (itemWidth + itemGap))
+				const itemColumnWidth = itemsPerColumn * (itemWidth + itemGap) - itemGap
+				const columnOffset = (columnWidth - itemColumnWidth) / 2
 
-				const sameBin = isSameBin(previous?.file.date, file.date, bin);
-				const sameHour = previous?.file.hour === file.hour;
+				const sameBin = isSameBin(previous?.file.date, file.date, bin)
+				const sameHour = previous?.file.hour === file.hour
 
-				const previousOfSameHour = items.findLast((i) => i.file.hour === file.hour);
-				const previousOfSameHourInSameBin = isSameBin(
-					previousOfSameHour?.file.date,
-					file.date,
-					bin
-				);
+				const previousOfSameHour = items.findLast((i) => i.file.hour === file.hour)
+				const previousOfSameHourInSameBin = isSameBin(previousOfSameHour?.file.date, file.date, bin)
 
-				let x = 0;
-				let y = 0;
-				let localX = null;
+				let x = 0
+				let y = 0
+				let localX = null
 
 				if (previousOfSameHourInSameBin) {
-					localX = (previousOfSameHour.bins[bin].localX ?? columnOffset) + itemWidth + itemGap;
-					const newLine = localX + itemWidth + itemGap > columnWidth;
-					if (newLine) localX = columnOffset;
+					localX = (previousOfSameHour.bins[bin].localX ?? columnOffset) + itemWidth + itemGap
+					const newLine = localX + itemWidth + itemGap > columnWidth
+					if (newLine) localX = columnOffset
 
-					x = file.hour * columnWidth + localX;
+					x = file.hour * columnWidth + localX
 					y = newLine
 						? previousOfSameHour.bins[bin].y + itemHeight + itemGap
-						: previousOfSameHour.bins[bin].y;
+						: previousOfSameHour.bins[bin].y
 				} else {
-					const between = timeBetween(previous?.file.date, file.date);
+					const between = timeBetween(previous?.file.date, file.date)
 					if (between?.[bin]) {
 						for (let i = 0; i < between?.[bin]; i++) {
-							const previousBinY = bins[bin].at(-1)?.y ?? 0;
-							const previousItemY = maxY[bin] + itemHeight;
+							const previousBinY = bins[bin].at(-1)?.y ?? 0
+							const previousItemY = maxY[bin] + itemHeight
 
 							bins[bin].push({
 								y: Math.max(previousBinY, previousItemY) + strokeWidth + itemGap
-							});
+							})
 						}
 					}
 
-					x = file.hour * columnWidth + columnOffset;
-					y = (bins[bin].at(-1)?.y ?? 0) + itemGap + strokeWidth;
+					x = file.hour * columnWidth + columnOffset
+					y = (bins[bin].at(-1)?.y ?? 0) + itemGap + strokeWidth
 				}
 
-				maxY[bin] = Math.max(maxY[bin], y);
+				maxY[bin] = Math.max(maxY[bin], y)
 
-				return [bin, { x, y, localX, width: itemWidth }];
-			});
+				return [bin, { x, y, localX, width: itemWidth }]
+			})
 
-			item.bins = Object.fromEntries(itemBins);
+			item.bins = Object.fromEntries(itemBins)
 
-			item.color = getColorFromFileType(file.type);
-			item.index = index;
-			items.push(item);
-		});
+			item.color = getColorFromFileType(file.type)
+			item.index = index
+			items.push(item)
+		})
 		return {
 			items,
 			bins,
 			height: maxY
-		};
-	});
+		}
+	})
 
 	let items = $derived(
 		vis?.items.map((item) => {
-			const x = lerp(item.bins[binning.current].x, item.bins[binning.next].x, binning.progress);
-			const y = lerp(item.bins[binning.current].y, item.bins[binning.next].y, binning.progress);
+			const x = lerp(item.bins[binning.current].x, item.bins[binning.next].x, binning.progress)
+			const y = lerp(item.bins[binning.current].y, item.bins[binning.next].y, binning.progress)
 			const width = lerp(
 				item.bins[binning.current].width,
 				item.bins[binning.next].width,
 				binning.progress
-			);
-			return { ...item, x, y, width };
+			)
+			return { ...item, x, y, width }
 		})
-	);
+	)
 
 	let chartHeight = $derived(
 		(vis ? lerp(vis.height[binning.current], vis.height[binning.next], binning.progress) : 0) +
 			itemHeight +
 			itemGap +
 			strokeWidth
-	);
-	let svgHeight = $derived(margin.top + margin.bottom + chartHeight);
+	)
+	let svgHeight = $derived(margin.top + margin.bottom + chartHeight)
 
 	let columns = $derived(
 		Array.from({ length: 25 }, (_, i) => ({
 			x: i * columnWidth
 		}))
-	);
+	)
 
 	// const xBinSize = 1
 
@@ -170,7 +166,7 @@
 	//   scaleLinear().domain([0, 24]).range([0, innerChartWidth])
 	// )
 
-	const maxInactiveDays = 3;
+	const maxInactiveDays = 3
 
 	// let yBins = $derived(
 	//   '-'
@@ -278,7 +274,7 @@
 	//   yBins.findIndex(({ next }) => next > maxInactiveDays)
 	// )
 
-	const fileTypes = ['drawing', 'image', 'document', 'other'];
+	const fileTypes = ['drawing', 'image', 'document', 'other']
 
 	// let innerSvgHeight = $derived(
 	//   yBins[yBins.length - 1].y + yBins[yBins.length - 1].height
