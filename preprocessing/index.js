@@ -83,6 +83,16 @@ async function preprocess() {
       )
     )
   );
+
+  await promises.writeFile(
+    join(options.outputDir, `directories.json`),
+    JSON.stringify(
+      directories.map((dir) => ({
+        name: dir.name,
+        file: `${dir.name}.json`,
+      }))
+    )
+  );
   console.log(`preprocessing completed`);
   console.log(
     `exported ${
