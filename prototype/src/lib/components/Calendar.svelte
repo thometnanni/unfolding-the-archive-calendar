@@ -4,9 +4,19 @@
 	import { scaleLinear } from 'd3-scale'
 	import { filesize } from 'filesize'
 	import Between from './Between.svelte'
+	// import Select from './Select.svelte'
 
 	let { zoom } = $props()
 	let data = $derived($page.data.project)
+
+	// const projects = [
+	// 	{ value: 'apple', label: 'Apple' },
+	// 	{ value: 'banana', label: 'Banana' },
+	// 	{ value: 'cherry', label: 'Cherry' },
+	// 	{ value: 'date', label: 'Date' }
+	// ]
+
+	// let selectedProject = $state(null)
 
 	let svgWidth = $state()
 
@@ -16,12 +26,7 @@
 
 	const collapsedBinHeight = 50
 
-	const margin = {
-		top: 50 + collapsedBinHeight * 0.75,
-		right: 25,
-		bottom: 25,
-		left: 25
-	}
+	const margin = $derived($page.data.margin)
 
 	let chartWidth = $derived(svgWidth - margin.left - margin.right)
 	let columnWidth = $derived(chartWidth / 24)
@@ -63,31 +68,31 @@
 		files.forEach((file, index) => {
 			const itemBins = Object.entries(binConfig).map(
 				([bin, { itemWidth: desiredItemWidth, maxBetween }]) => {
-				let itemWidth = columnInnerWidth
-				if (desiredItemWidth && desiredItemWidth < columnInnerWidth) {
-					const itemsPerColumn = Math.floor(
-						(columnInnerWidth + itemGap) / (desiredItemWidth + itemGap)
-					)
-					itemWidth = (columnInnerWidth + itemGap) / itemsPerColumn - itemGap
-				}
+					let itemWidth = columnInnerWidth
+					if (desiredItemWidth && desiredItemWidth < columnInnerWidth) {
+						const itemsPerColumn = Math.floor(
+							(columnInnerWidth + itemGap) / (desiredItemWidth + itemGap)
+						)
+						itemWidth = (columnInnerWidth + itemGap) / itemsPerColumn - itemGap
+					}
 
-				let x = 0
-				let y = 0
-				let localX = null
+					let x = 0
+					let y = 0
+					let localX = null
 
-				const previousItem = items.findLast((i) => i.file.hour === file.hour)
-				const sameBin = isSameBin(previousItem?.file.date, file.date, bin)
+					const previousItem = items.findLast((i) => i.file.hour === file.hour)
+					const sameBin = isSameBin(previousItem?.file.date, file.date, bin)
 
-				if (sameBin) {
-					localX = (previousItem.bins[bin].localX ?? itemGap) + itemWidth + itemGap
-					const newLine = localX + itemWidth + itemGap > columnWidth
+					if (sameBin) {
+						localX = (previousItem.bins[bin].localX ?? itemGap) + itemWidth + itemGap
+						const newLine = localX + itemWidth + itemGap > columnWidth
 						if (newLine) localX = itemGap + strokeWidth / 2
 
-					x = file.hour * columnWidth + localX
-					y = newLine ? previousItem.bins[bin].y + itemHeight + itemGap : previousItem.bins[bin].y
-				} else {
-					const between = timeBetween(items.at(-1)?.file.date, file.date)
-					if (between?.[bin]) {
+						x = file.hour * columnWidth + localX
+						y = newLine ? previousItem.bins[bin].y + itemHeight + itemGap : previousItem.bins[bin].y
+					} else {
+						const between = timeBetween(items.at(-1)?.file.date, file.date)
+						if (between?.[bin]) {
 							if (maxBetween && between?.[bin] > maxBetween) {
 								const y = maxY[bin] + itemHeight + strokeWidth + itemGap
 
@@ -101,24 +106,24 @@
 									}
 								)
 							} else {
-						for (let i = 0; i < between?.[bin]; i++) {
-							const previousBinY = bins[bin].at(-1)?.y ?? 0
-							const previousItemY = maxY[bin] + itemHeight
+								for (let i = 0; i < between?.[bin]; i++) {
+									const previousBinY = bins[bin].at(-1)?.y ?? 0
+									const previousItemY = maxY[bin] + itemHeight
 
-							bins[bin].push({
-								y: Math.max(previousBinY, previousItemY) + strokeWidth + itemGap
-							})
+									bins[bin].push({
+										y: Math.max(previousBinY, previousItemY) + strokeWidth + itemGap
+									})
 								}
+							}
 						}
-					}
 
 						x = file.hour * columnWidth + itemGap + strokeWidth / 2
-					y = (bins[bin].at(-1)?.y ?? 0) + itemGap + strokeWidth
-				}
+						y = (bins[bin].at(-1)?.y ?? 0) + itemGap + strokeWidth
+					}
 
-				maxY[bin] = Math.max(maxY[bin], y)
+					maxY[bin] = Math.max(maxY[bin], y)
 
-				return [bin, { x, y, localX, width: itemWidth }]
+					return [bin, { x, y, localX, width: itemWidth }]
 				}
 			)
 
@@ -153,7 +158,7 @@
 			itemHeight +
 			itemGap +
 			strokeWidth +
-			collapsedBinHeight * 0.75
+			collapsedBinHeight * 1.5
 	)
 	let svgHeight = $derived(margin.top + margin.bottom + chartHeight)
 
@@ -182,8 +187,6 @@
 	// const scaleX = $derived(
 	//   scaleLinear().domain([0, 24]).range([0, innerChartWidth])
 	// )
-
-	const maxInactiveDays = 3
 
 	// let yBins = $derived(
 	//   '-'
@@ -352,7 +355,7 @@
 		class="visualisation"
 	>
 		{#if vis}
-			<g transform="translate({margin.left}, {margin.top})">
+			<g transform="translate({margin.left}, {margin.top + collapsedBinHeight * 0.75})">
 				{#each items as item}
 					<rect width={item.width} height={itemHeight} x={item.x} y={item.y} fill={item.color}
 					></rect>
