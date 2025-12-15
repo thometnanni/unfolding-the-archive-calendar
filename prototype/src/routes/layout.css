@@ -16,4 +16,5 @@
 
 :root {
 	font-family: Ronzino;
+	text-rendering: geometricPrecision;
 }

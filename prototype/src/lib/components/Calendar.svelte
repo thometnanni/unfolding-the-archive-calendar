@@ -4,9 +4,13 @@
 	import { scaleLinear } from 'd3-scale'
 	import { filesize } from 'filesize'
 	import Between from './Between.svelte'
+	import { writable } from 'svelte/store'
+	// import { userState } from '$lib/state.svelte'
 	// import Select from './Select.svelte'
 
 	let { zoom } = $props()
+	// let zoom = writable(1)
+	// let zoom = $derived(userState.zoom)
 	let data = $derived($page.data.project)
 
 	// const projects = [
@@ -158,9 +162,9 @@
 			itemHeight +
 			itemGap +
 			strokeWidth +
-			collapsedBinHeight * 1.5
+			collapsedBinHeight * 0.75
 	)
-	let svgHeight = $derived(margin.top + margin.bottom + chartHeight)
+	let svgHeight = $derived(margin.top + margin.bottom + chartHeight + collapsedBinHeight * 0.75)
 
 	let columns = $derived(
 		Array.from({ length: 25 }, (_, i) => ({

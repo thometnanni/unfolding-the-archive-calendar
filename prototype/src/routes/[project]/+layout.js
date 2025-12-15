@@ -12,7 +12,7 @@ export async function load({ fetch }) {
 	const projects = await res.json()
 
 	const margin = {
-		top: 50,
+		top: 25,
 		right: 25,
 		bottom: 25,
 		left: 25

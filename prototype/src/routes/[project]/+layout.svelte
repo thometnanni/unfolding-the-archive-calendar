@@ -1,7 +1,10 @@
 <script>
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
+	import Radio from '$lib/components/Radio.svelte'
 	import Select from '$lib/components/Select.svelte'
+	import { userState } from '$lib/state.svelte'
+	import { writable } from 'svelte/store'
 
 	let { children } = $props()
 
@@ -30,12 +33,31 @@
 		}))
 	)
 	// $effect(() => goto(selectedProject))
+
+	const zoomOptions = [
+		{
+			value: 1,
+			label: 'none'
+		},
+		{
+			value: 2,
+			label: 'year'
+		},
+		{
+			value: 3,
+			label: 'month'
+		},
+		{
+			value: 4,
+			label: 'day'
+		}
+	]
 </script>
 
 <div>
 	<nav class="w-full bg-slate-800 text-white sticky top-0">
 		<Select options={projects} bind:value={selectedProject} on:change={selectProject} />
-
+		<Radio label="group by" options={zoomOptions} bind:value={userState.zoom} name="zoom-level" />
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<svg width="100%" bind:clientWidth={svgWidth} height="50" role="img" class="axis">

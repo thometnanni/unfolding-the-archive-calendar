@@ -4,11 +4,19 @@
 	import { zoom } from 'd3-zoom'
 	import { select } from 'd3-selection'
 	import { onMount } from 'svelte'
+	import { userState } from '$lib/state.svelte'
 
 	let container
 	let zoomBehavior
 
-	let scale = $state(1)
+	$effect(() => {
+		const zoom = userState.zoom
+		console.log(zoom)
+		if (!container || !zoomBehavior) return
+		select(container).transition().duration(SNAP_DURATION).call(zoomBehavior.scaleTo, zoom)
+	})
+
+	let scale = $state(userState.zoom)
 
 	const MIN_SCALE = 1
 	const MAX_SCALE = 4
@@ -27,14 +35,16 @@
 				if (!event.sourceEvent) return
 
 				const current = event.transform.k
-				const rounded = Math.round(current)
-				// If already near an integer, do nothing
-				if (Math.abs(rounded - current) <= SNAP_EPS) return
+				const rounded = clamp(Math.round(current), MIN_SCALE, MAX_SCALE)
 
-				select(container)
-					.transition()
-					.duration(SNAP_DURATION)
-					.call(zoomBehavior.scaleTo, clamp(rounded, MIN_SCALE, MAX_SCALE))
+				userState.zoom = rounded
+				// If already near an integer, do nothing
+				// if (Math.abs(rounded - current) <= SNAP_EPS) return
+
+				// select(container)
+				// 	.transition()
+				// 	.duration(SNAP_DURATION)
+				// 	.call(zoomBehavior.scaleTo)
 			})
 			.filter(({ type, ctrlKey, shiftKey, altKey, touches }) => {
 				switch (type) {
@@ -69,17 +79,19 @@
 
 	function snapScale() {
 		// Snap to nearest integer when slider is released
-		const rounded = Math.round(scale)
-		if (Math.abs(rounded - scale) <= SNAP_EPS) return
+		const rounded = clamp(Math.round(scale), MIN_SCALE, MAX_SCALE)
+		userState.zoom = rounded
 
-		select(container)
-			.transition()
-			.duration(SNAP_DURATION)
-			.call(zoomBehavior.scaleTo, clamp(rounded, MIN_SCALE, MAX_SCALE))
+		// if (Math.abs(rounded - scale) <= SNAP_EPS) return
+
+		// select(container)
+		// 	.transition()
+		// 	.duration(SNAP_DURATION)
+		// 	.call(zoomBehavior.scaleTo, clamp(rounded, MIN_SCALE, MAX_SCALE))
 	}
 </script>
 
-<input
+<!-- <input
 	type="range"
 	min={MIN_SCALE}
 	max={MAX_SCALE}
@@ -87,7 +99,7 @@
 	step="0.01"
 	oninput={setScale}
 	onchange={snapScale}
-/>
+/> -->
 <div bind:this={container} class="zoom wrapper">
 	{@render children?.(scale)}
 </div>
