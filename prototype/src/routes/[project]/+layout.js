@@ -18,5 +18,12 @@ export async function load({ fetch }) {
 		left: 25
 	}
 
-	return { projects, margin }
+	const colors = {
+		drawing: 'var(--color-teal-500)',
+		image: 'var(--color-fuchsia-500)',
+		document: 'var(--color-amber-500)',
+		other: 'var(--color-slate-500)'
+	}
+
+	return { projects, margin, colors }
 }

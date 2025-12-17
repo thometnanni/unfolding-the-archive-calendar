@@ -1,5 +1,6 @@
 <script>
 	import { browser } from '$app/environment'
+
 	import { onMount, onDestroy, createEventDispatcher } from 'svelte'
 	import { tick } from 'svelte'
 
@@ -97,10 +98,10 @@
 	}
 </script>
 
-<div class="wrapper">
+<div class="relative inline-block w-[280px]">
 	<!-- Toggle button -->
 	<button
-		class="toggle"
+		class="w-full cursor-pointer flex items-center gap-2 text-slate-100"
 		bind:this={buttonEl}
 		type="button"
 		aria-haspopup="listbox"
@@ -110,25 +111,39 @@
 	>
 		{selectedLabel}
 		<svg
-			style="float: right; width: 1em; height: 1em;"
-			viewBox="0 0 20 20"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="2"
+			class:rotate-180={open}
+			xmlns="http://www.w3.org/2000/svg"
+			width="17"
+			height="17"
+			viewBox="0 0 17 17"
+			><path
+				fill="currentColor"
+				fill-rule="evenodd"
+				d="M122.5,28 C127.19442,28 131,31.8055796 131,36.5 C131,41.1944204 127.19442,45 122.5,45 C117.80558,45 114,41.1944204 114,36.5 C114,31.8055796 117.80558,28 122.5,28 Z M125.674604,35.1203717 L122.5,37.841 L119.325396,35.1203717 L118.674604,35.8796283 L122.5,39.1585389 L126.325396,35.8796283 L125.674604,35.1203717 Z"
+				transform="translate(-114 -28)"
+			/></svg
 		>
-			<polyline points="5 8 10 13 15 8"></polyline>
-		</svg>
 	</button>
 
 	<!-- Options list -->
 	{#if open}
-		<ul class="options" bind:this={listEl} role="listbox" tabindex="-1" onkeydown={onKeyDown}>
+		<ul
+			class="absolute top-full left-0 right-0 overflow-y-auto max-h-[calc(100vh-52px)] flex flex-col items-start pt-1 -ml-4 text-slate-400"
+			style="scrollbar-width: none;"
+			bind:this={listEl}
+			role="listbox"
+			tabindex="-1"
+			onkeydown={onKeyDown}
+			onclick={() => (open = false)}
+		>
 			{#each options as opt, i}
+				{@const selected = opt.value === value}
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<li
-					class="option {i === highlightedIndex ? 'highlighted' : ''}"
+					class="bg-slate-800 cursor-pointer option px-4 py-1 hover:text-slate-100 flex gap-2 items-center"
+					class:text-slate-100={selected}
 					role="option"
-					aria-selected={opt.value === value}
+					aria-selected={selected}
 					onclick={() => select(i)}
 				>
 					{opt.label}
@@ -139,62 +154,4 @@
 </div>
 
 <style>
-	/* -------------------------------------------------
-   *  Basic layout – feel free to replace these rules
-   * ------------------------------------------------- */
-	.wrapper {
-		position: relative;
-		display: inline-block;
-		width: 200px; /* adjust as needed */
-	}
-
-	button.toggle {
-		width: 100%;
-		padding: 0.5rem 1rem;
-		text-align: left;
-		background: #fff;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		cursor: pointer;
-	}
-
-	button.toggle[aria-expanded='true'] {
-		border-bottom-left-radius: 0;
-		border-bottom-right-radius: 0;
-	}
-
-	ul.options {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		max-height: 12rem;
-		margin: 0;
-		padding: 0;
-		overflow-y: auto;
-		background: #fff;
-		border: 1px solid #ccc;
-		border-top: none;
-		border-bottom-left-radius: 4px;
-		border-bottom-right-radius: 4px;
-		z-index: 10;
-		list-style: none;
-	}
-
-	li.option {
-		padding: 0.5rem 1rem;
-		cursor: pointer;
-	}
-
-	li.option:hover,
-	li.option[aria-selected='true'],
-	li.option.highlighted {
-		background: #f0f0f0;
-	}
-
-	/* Example of custom styling – change colors, fonts, etc. */
-	.custom-theme li.option:hover {
-		background: #007aff;
-		color: #fff;
-	}
 </style>

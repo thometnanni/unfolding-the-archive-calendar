@@ -134,7 +134,7 @@
 			items.push({
 				file,
 				bins: Object.fromEntries(itemBins),
-				color: getColorFromFileType(file.type)
+				color: $page.data.colors[file.type] ?? $page.data.colors.other
 			})
 		})
 		return {
