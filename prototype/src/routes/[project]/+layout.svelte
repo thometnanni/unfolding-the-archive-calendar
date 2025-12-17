@@ -20,7 +20,6 @@
 
 	function selectProject(e) {
 		goto(selectedProject)
-		console.log('select', e)
 	}
 
 	// $effect(() => goto(selectedProject))
@@ -50,7 +49,10 @@
 </script>
 
 <div>
-	<nav class="w-full bg-slate-800 text-slate-100 sticky top-0 max-xs:text-[14px]">
+	<nav
+		class="w-full bg-slate-800 text-slate-100 sticky top-0 max-xs:text-[14px] z-1"
+		bind:clientHeight={userState.navHeight}
+	>
 		<div class="flex flex-wrap">
 			<div class="flex flex-col px-4 max-xs:px-2 py-2 max-xs:py-1 gap-1 z-1">
 				<span class="text-xs max-xs:hidden">project</span>
@@ -69,7 +71,7 @@
 		<div class="flex flex-wrap">
 			<div class="flex xs:flex-col px-4 max-xs:px-2 py-2 max-xs:py-1 gap-1 max-xs:gap-3">
 				<span class="xs:text-xs">search</span>
-				<Search placeholder="filename" />
+				<Search bind:value={userState.fileName} placeholder="filename" />
 			</div>
 			<div class="flex flex-col px-4 max-xs:px-2 py-2 max-xs:py-1 gap-1">
 				<span class="text-xs max-xs:hidden">filetypes</span>
@@ -77,8 +79,10 @@
 					label="group by"
 					options={fileTypes}
 					bind:value={userState.fileType}
+					bind:hoverValue={userState.hover.fileType}
 					name="file-type"
 					allowNull
+					allowHover
 				/>
 			</div>
 		</div>

@@ -5,6 +5,9 @@
 	import { filesize } from 'filesize'
 	import Between from './Between.svelte'
 	import { writable } from 'svelte/store'
+	import { userState } from '$lib/state.svelte'
+	import { browser } from '$app/environment'
+	import Inspector from './Inspector.svelte'
 	// import { userState } from '$lib/state.svelte'
 	// import Select from './Select.svelte'
 
@@ -69,74 +72,84 @@
 			day: 0
 		}
 
-		files.forEach((file, index) => {
-			const itemBins = Object.entries(binConfig).map(
-				([bin, { itemWidth: desiredItemWidth, maxBetween }]) => {
-					let itemWidth = columnInnerWidth
-					if (desiredItemWidth && desiredItemWidth < columnInnerWidth) {
-						const itemsPerColumn = Math.floor(
-							(columnInnerWidth + itemGap) / (desiredItemWidth + itemGap)
-						)
-						itemWidth = (columnInnerWidth + itemGap) / itemsPerColumn - itemGap
-					}
+		files
+			.filter((file) => {
+				const allowFileName = !userState.fileName || file.path.indexOf(userState.fileName) !== -1
+				const allowFileType = !userState.fileType || userState.fileType === (file.type ?? 'other')
 
-					let x = 0
-					let y = 0
-					let localX = null
-
-					const previousItem = items.findLast((i) => i.file.hour === file.hour)
-					const sameBin = isSameBin(previousItem?.file.date, file.date, bin)
-
-					if (sameBin) {
-						localX = (previousItem.bins[bin].localX ?? itemGap) + itemWidth + itemGap
-						const newLine = localX + itemWidth + itemGap > columnWidth
-						if (newLine) localX = itemGap + strokeWidth / 2
-
-						x = file.hour * columnWidth + localX
-						y = newLine ? previousItem.bins[bin].y + itemHeight + itemGap : previousItem.bins[bin].y
-					} else {
-						const between = timeBetween(items.at(-1)?.file.date, file.date)
-						if (between?.[bin]) {
-							if (maxBetween && between?.[bin] > maxBetween) {
-								const y = maxY[bin] + itemHeight + strokeWidth + itemGap
-
-								bins[bin].push(
-									{
-										y,
-										between: between?.[bin]
-									},
-									{
-										y: y + collapsedBinHeight
-									}
-								)
-							} else {
-								for (let i = 0; i < between?.[bin]; i++) {
-									const previousBinY = bins[bin].at(-1)?.y ?? 0
-									const previousItemY = maxY[bin] + itemHeight
-
-									bins[bin].push({
-										y: Math.max(previousBinY, previousItemY) + strokeWidth + itemGap
-									})
-								}
-							}
+				return allowFileName && allowFileType
+			})
+			.forEach((file, index) => {
+				const itemBins = Object.entries(binConfig).map(
+					([bin, { itemWidth: desiredItemWidth, maxBetween }]) => {
+						let itemWidth = columnInnerWidth
+						if (desiredItemWidth && desiredItemWidth < columnInnerWidth) {
+							const itemsPerColumn = Math.floor(
+								(columnInnerWidth + itemGap) / (desiredItemWidth + itemGap)
+							)
+							itemWidth = (columnInnerWidth + itemGap) / itemsPerColumn - itemGap
 						}
 
-						x = file.hour * columnWidth + itemGap + strokeWidth / 2
-						y = (bins[bin].at(-1)?.y ?? 0) + itemGap + strokeWidth
+						let x = 0
+						let y = 0
+						let localX = null
+
+						const previousItem = items.findLast((i) => i.file.hour === file.hour)
+						const sameBin = isSameBin(previousItem?.file.date, file.date, bin)
+
+						if (sameBin) {
+							localX = (previousItem.bins[bin].localX ?? itemGap) + itemWidth + itemGap
+							const newLine = localX + itemWidth + itemGap > columnWidth
+							if (newLine) localX = itemGap + strokeWidth / 2
+
+							x = file.hour * columnWidth + localX
+							y = newLine
+								? previousItem.bins[bin].y + itemHeight + itemGap
+								: previousItem.bins[bin].y
+						} else {
+							const between = timeBetween(items.at(-1)?.file.date, file.date)
+							if (between?.[bin]) {
+								if (maxBetween && between?.[bin] > maxBetween) {
+									const y = maxY[bin] + itemHeight + strokeWidth + itemGap
+
+									bins[bin].push(
+										{
+											y,
+											between: between?.[bin]
+										},
+										{
+											y: y + collapsedBinHeight
+										}
+									)
+								} else {
+									for (let i = 0; i < between?.[bin]; i++) {
+										const previousBinY = bins[bin].at(-1)?.y ?? 0
+										const previousItemY = maxY[bin] + itemHeight
+
+										bins[bin].push({
+											y: Math.max(previousBinY, previousItemY) + strokeWidth + itemGap
+										})
+									}
+								}
+							}
+
+							x = file.hour * columnWidth + itemGap + strokeWidth / 2
+							y = (bins[bin].at(-1)?.y ?? 0) + itemGap + strokeWidth
+						}
+
+						maxY[bin] = Math.max(maxY[bin], y)
+
+						return [bin, { x, y, localX, width: itemWidth }]
 					}
+				)
 
-					maxY[bin] = Math.max(maxY[bin], y)
-
-					return [bin, { x, y, localX, width: itemWidth }]
-				}
-			)
-
-			items.push({
-				file,
-				bins: Object.fromEntries(itemBins),
-				color: $page.data.colors[file.type] ?? $page.data.colors.other
+				items.push({
+					index,
+					file,
+					bins: Object.fromEntries(itemBins),
+					color: $page.data.colors[file.type] ?? $page.data.colors.other
+				})
 			})
-		})
 		return {
 			items,
 			bins,
@@ -164,7 +177,12 @@
 			strokeWidth +
 			collapsedBinHeight * 0.75
 	)
-	let svgHeight = $derived(margin.top + margin.bottom + chartHeight + collapsedBinHeight * 0.75)
+	let svgHeight = $derived(
+		Math.max(
+			margin.top + margin.bottom + chartHeight + collapsedBinHeight * 0.75,
+			((browser && innerHeight) ?? 0) - userState.navHeight
+		)
+	)
 
 	let columns = $derived(
 		Array.from({ length: 25 }, (_, i) => ({
@@ -340,14 +358,23 @@
 	//     selectedFileLocked = true
 	//   }
 	// }
-	// function clearFile(removeLock) {
-	//   if (selectedFileLocked && !removeLock) return
-	//   selectedFileLocked = false
-	//   selectedFile = null
-	// }
+	function clearFile() {
+		userState.item = null
+	}
+
+	function isActive({ index, file }) {
+		const activeItem = userState.item ?? userState.hover.item
+		if (activeItem) return activeItem.index === index
+		if (userState.hover.fileType) return (file.type ?? 'other') === userState.hover.fileType
+		return true
+
+		// (userState.item === null && userState.hover.item === null && (userState.fileType ===)) ||
+		// 				userState.item?.index === item.index ||
+		// 				 === item.index
+	}
 </script>
 
-<div class="calendar">
+<div class="calendar relative">
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<svg
@@ -361,7 +388,31 @@
 		{#if vis}
 			<g transform="translate({margin.left}, {margin.top + collapsedBinHeight * 0.75})">
 				{#each items as item}
-					<rect width={item.width} height={itemHeight} x={item.x} y={item.y} fill={item.color}
+					{@const active = isActive(item)}
+					<rect
+						width={item.width}
+						height={itemHeight}
+						x={item.x}
+						y={item.y}
+						fill={item.color}
+						opacity={active ? 1 : 0.3}
+					></rect>
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<rect
+						width={item.width + itemGap * 2 + strokeWidth}
+						height={itemHeight + itemGap}
+						x={item.x - itemGap}
+						y={item.y - itemGap / 2}
+						fill="green"
+						onmouseenter={() => (userState.hover.item = item)}
+						onmouseleave={() => (userState.hover.item = null)}
+						onclick={(e) => {
+							if (userState.item) return
+							e.stopPropagation()
+							userState.item = item
+						}}
+						opacity="0"
+						class:cursor-none={userState.item == null}
 					></rect>
 				{/each}
 
@@ -372,7 +423,7 @@
 							x2={column.x}
 							y2={chartHeight}
 							stroke="currentColor"
-							class="text-slate-300"
+							class="text-slate-300 pointer-events-none"
 						></line>
 					{/each}
 				</g>
@@ -411,6 +462,7 @@
 			</g>
 		{/if}
 	</svg>
+	<Inspector />
 </div>
 
 <style>

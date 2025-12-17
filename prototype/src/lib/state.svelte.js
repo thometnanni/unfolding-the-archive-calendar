@@ -1,4 +1,11 @@
 export const userState = $state({
 	zoom: 1,
-	fileType: null
+	navHeight: 0,
+	item: null,
+	fileType: null,
+	fileName: '',
+	hover: {
+		item: null,
+		fileType: null
+	}
 })
