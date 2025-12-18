@@ -3,11 +3,13 @@ import { join, normalize } from "node:path";
 import { ignore_files, file_types } from "./config.js";
 import { getArgValue } from "./utils.js";
 import { statSync } from "node:fs";
+import { parseLayers } from "./layers/index.js";
 
 const options = {
   inputDir: getArgValue("-i", "Please specify an input directory"),
   outputDir: getArgValue("-o") ?? "../prototype/static/projects",
   batch: getArgValue("--batch"),
+  layers: getArgValue("--layers"),
 };
 
 function getDirectories(path) {
@@ -23,7 +25,7 @@ function getDirectories(path) {
   return entries;
 }
 
-function getFiles(dir) {
+async function getFiles(dir) {
   const files = readdirSync(dir, {
     withFileTypes: true,
     recursive: true,
@@ -43,7 +45,7 @@ function getFiles(dir) {
       const date = new Date(birthtime);
       return {
         name,
-        path: normalize(path.replace(dir, ".")),
+        path,
         fileSize: statSync(path).size,
         birthtime,
         type: file_types[ext],
@@ -51,9 +53,17 @@ function getFiles(dir) {
         date: formatDate(date),
       };
     })
-    .sort((a, b) => a.birthtime - b.birthtime);
+    .sort((a, b) => a.birthtime - b.birthtime)
+    .map(async (file) => {
+      const layers = options.layers && (await parseLayers(file.path));
+      return {
+        ...file,
+        path: normalize(file.path.replace(dir, ".")),
+        ...(layers && layers.length && { layers }),
+      };
+    });
 
-  return files;
+  return Promise.all(files);
 }
 
 function formatDate(date) {
@@ -64,11 +74,13 @@ function formatDate(date) {
 }
 
 async function preprocess() {
-  const directories = normalizeInputDir(options.inputDir, options.batch).map(
-    ({ name, path }) => {
-      const files = getFiles(path);
-      return { name, files };
-    }
+  const directories = await Promise.all(
+    normalizeInputDir(options.inputDir, options.batch).map(
+      async ({ name, path }) => {
+        const files = await getFiles(path);
+        return { name, files };
+      }
+    )
   );
 
   if (!existsSync(options.outputDir)) {
