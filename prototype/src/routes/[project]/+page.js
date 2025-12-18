@@ -17,7 +17,7 @@ export async function load({ params, fetch }) {
 export async function entries() {
 	const { default: directories } = await import('../../../static/projects/directories.json')
 
-	return directories.map(({ name }) => ({ project: name }))
+	return directories.map(({ file }) => ({ project: file }))
 }
 
 export const prerender = true

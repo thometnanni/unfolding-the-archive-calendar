@@ -11,7 +11,7 @@
 	let { children } = $props()
 
 	let projects = $derived(
-		$page.data.projects.map(({ name: value, name: label }) => ({ value, label }))
+		$page.data.projects.map(({ file: value, name: label }) => ({ value, label }))
 	)
 
 	let selectedProject = $derived(

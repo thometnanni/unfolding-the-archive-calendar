@@ -1,7 +1,7 @@
 import { read, readdirSync, promises, existsSync, mkdirSync } from "node:fs";
 import { join, normalize } from "node:path";
 import { ignore_files, file_types } from "./config.js";
-import { getArgValue } from "./utils.js";
+import { getArgValue, sanitiseFileName } from "./utils.js";
 import { statSync } from "node:fs";
 import { parseLayers } from "./layers/index.js";
 
@@ -90,7 +90,7 @@ async function preprocess() {
   await Promise.all(
     directories.map((dir) =>
       promises.writeFile(
-        join(options.outputDir, `${dir.name}.json`),
+        join(options.outputDir, `${sanitiseFileName(dir.name)}.json`),
         JSON.stringify(dir)
       )
     )
@@ -101,7 +101,7 @@ async function preprocess() {
     JSON.stringify(
       directories.map((dir) => ({
         name: dir.name,
-        file: `${dir.name}.json`,
+        file: `${sanitiseFileName(dir.name)}`,
       }))
     )
   );
