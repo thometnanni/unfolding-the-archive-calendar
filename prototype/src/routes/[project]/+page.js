@@ -13,3 +13,11 @@ export async function load({ params, fetch }) {
 
 	return { project }
 }
+
+export async function entries() {
+	const { default: directories } = await import('../../../static/projects/directories.json')
+
+	return directories.map(({ name }) => ({ project: name }))
+}
+
+export const prerender = true
