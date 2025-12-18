@@ -7,7 +7,9 @@
 
 	let item = $derived(userState.item || userState.hover.item)
 
-	let x = $derived(item?.x + offset.x + item?.width / 2)
+	let x = $derived(
+		Math.min(Math.max(item?.x + offset.x + item?.width / 2, 150), width - 150 + offset.x * 2)
+	)
 	let y = $derived(item?.y + offset.y)
 	let date = $derived(item && new Date(item.file.birthtime))
 </script>
