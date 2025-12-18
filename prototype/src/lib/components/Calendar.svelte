@@ -395,7 +395,7 @@
 						x={item.x}
 						y={item.y}
 						fill={item.color}
-						opacity={active ? 1 : 0.3}
+						opacity={active ? 1 : 0.37}
 					></rect>
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<rect
