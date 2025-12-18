@@ -1,6 +1,7 @@
 <script>
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
+	import About from '$lib/components/About.svelte'
 	import Radio from '$lib/components/Radio.svelte'
 	import Search from '$lib/components/Search.svelte'
 	import Select from '$lib/components/Select.svelte'
@@ -49,6 +50,7 @@
 </script>
 
 <div>
+	<About />
 	<nav
 		class="w-full bg-slate-800 text-slate-100 sticky top-0 max-xs:text-[14px] z-1"
 		bind:clientHeight={userState.navHeight}
