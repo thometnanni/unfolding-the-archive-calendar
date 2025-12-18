@@ -16,10 +16,4 @@ export async function dxf(path) {
   } catch (err) {
     console.log(err);
   }
-
-  // const text = fileContent
-  //     const parsed = new DxfParser().parseSync(text)
-  // const entries = parsed.tables?.layer?.entries || parsed.tables?.layer?.layers;
-
-  // return ["layer"];
 }
