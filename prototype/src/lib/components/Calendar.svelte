@@ -385,7 +385,7 @@
 		role="img"
 		class="visualisation"
 	>
-		{#if vis}
+		{#if vis?.items?.length}
 			<g transform="translate({margin.left}, {margin.top + collapsedBinHeight * 0.75})">
 				{#each items as item}
 					{@const active = isActive(item)}
@@ -462,7 +462,20 @@
 			</g>
 		{/if}
 	</svg>
-	<Inspector />
+	{#if !vis?.items?.length}
+		<div class="absolute top-6 w-full flex justify-center">
+			<span class="px-8 py-1 bg-slate-100 border border-slate-300 text-xs text-slate-400"
+				>no matching files</span
+			>
+		</div>
+	{/if}
+	<Inspector
+		width={chartWidth}
+		offset={{
+			x: margin.left,
+			y: margin.top + collapsedBinHeight * 0.75 + itemHeight / 2
+		}}
+	/>
 </div>
 
 <style>
