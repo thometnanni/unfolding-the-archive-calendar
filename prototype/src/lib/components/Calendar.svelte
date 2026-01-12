@@ -74,7 +74,9 @@
 
 		files
 			.filter((file) => {
-				const allowFileName = !userState.fileName || file.path.indexOf(userState.fileName) !== -1
+				const allowFileName =
+					!userState.fileName ||
+					file.path.toLowerCase().indexOf(userState.fileName.toLowerCase()) !== -1
 				const allowFileType = !userState.fileType || userState.fileType === (file.type ?? 'other')
 
 				return allowFileName && allowFileType
