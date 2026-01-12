@@ -23,8 +23,6 @@
 		goto(selectedProject, { replaceState: true, noScroll: true, keepFocus: true })
 	}
 
-	// $effect(() => goto(selectedProject))
-
 	const zoomOptions = [
 		{
 			value: 1,
