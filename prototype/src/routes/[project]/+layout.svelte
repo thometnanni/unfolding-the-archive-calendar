@@ -20,7 +20,7 @@
 	)
 
 	function selectProject(e) {
-		goto(selectedProject)
+		goto(selectedProject), { replaceState: true, noScroll: true, keepFocus: true })
 	}
 
 	// $effect(() => goto(selectedProject))
