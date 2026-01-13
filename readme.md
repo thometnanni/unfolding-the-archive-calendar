@@ -138,7 +138,7 @@ npm run dev
 
 ##### Updating _About_
 
-The prototype consists of several components and script files. To change the text appearing on the website open `src/lib/componets/About.svelte` The html text on top is always visible, eveything between `{#if showMore}` and `{/if}` is shown on demand.
+The prototype consists of several components and script files. To change the text appearing on the website open `src/lib/components/About.svelte` The html text on top is always visible, eveything between `{#if showMore}` and `{/if}` is shown on demand.
 
 ##### Other Changes
 
