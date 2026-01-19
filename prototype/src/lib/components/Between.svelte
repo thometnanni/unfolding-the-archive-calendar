@@ -47,11 +47,11 @@
 	x={-strokeWidth / 2}
 	y={y + strokeWidth / 2}
 	fill="currentColor"
-	class="text-white"
+	class="text-white pointer-events-none"
 >
 </rect>
 
-<g transform="translate(0, {y})">
+<g transform="translate(0, {y})" class="pointer-events-none">
 	<!-- {#each columns as column} -->
 	<path d={path} stroke="currentColor" fill="var(--color-slate-50)" class="text-slate-300"></path>
 	<!-- {/each} -->

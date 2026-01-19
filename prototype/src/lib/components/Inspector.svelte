@@ -41,7 +41,7 @@
 				<span class="text-slate-800">{item.file.name}</span>
 			</div>
 		</div>
-		<div class="absolute flex flex-col top-2 gap-1 justify-center items-center">
+		<div class="absolute flex flex-col top-2 gap-1 justify-center items-center w-[300px]">
 			{#if item.y <= 40}
 				<div
 					class="info px-2 py-1 whitespace-nowrap right-2 text-xs -ml-20"
@@ -68,14 +68,17 @@
 					{item.file.layers.length} layers
 				</div>
 
-				{#if userState.item}
-					<div class="info px-2 py-1 right-5 top-1 text-xs w-[300px] text-center">
-						<!-- {#each item.file.layers as layer}
+				<!-- {#if userState.item} -->
+				<div
+					class="info px-2 py-1 right-5 top-1 text-xs max-w-[300px] text-center max-h-[min(240px,70vh)] overflow-auto"
+					class:pointer-events-auto={userState.item}
+				>
+					<!-- {#each item.file.layers as layer}
 							<span>{layer}</span>
 						{/each} -->
-						{item.file.layers.toSorted().join(', ')}
-					</div>
-				{/if}
+					{item.file.layers.toSorted().join(', ')}
+				</div>
+				<!-- {/if} -->
 			{/if}
 		</div>
 	</div>

@@ -8,6 +8,7 @@
 	import { userState } from '$lib/state.svelte'
 	import { browser } from '$app/environment'
 	import Inspector from './Inspector.svelte'
+	import DateReveal from './DateReveal.svelte'
 
 	let { zoom } = $props()
 	let data = $derived($page.data.project)
@@ -107,6 +108,7 @@
 											between: between?.[bin]
 										},
 										{
+											date: file.date,
 											y: y + collapsedBinHeight
 										}
 									)
@@ -116,6 +118,7 @@
 										const previousItemY = maxY[bin] + itemHeight
 
 										bins[bin].push({
+											date: file.date,
 											y: Math.max(previousBinY, previousItemY) + strokeWidth + itemGap
 										})
 									}
@@ -191,6 +194,8 @@
 		if (userState.hover.fileType) return (file.type ?? 'other') === userState.hover.fileType
 		return true
 	}
+
+	let selectedY = $derived(userState.hover.item?.bins?.[binning.current].y)
 </script>
 
 <div class="calendar relative">
@@ -206,6 +211,32 @@
 	>
 		{#if vis?.items?.length}
 			<g transform="translate({margin.left}, {margin.top + collapsedBinHeight * 0.75})">
+				{#if vis.bins[binning.current] && binning.current != 'all'}
+					{#each [{ y: 0, date: items[0].file.birthtime }, ...vis.bins[binning.current]] as { y, between, date }, index}}
+						{@const height =
+							(vis.bins[binning.current][index]?.y ?? chartHeight - collapsedBinHeight * 0.75) - y}
+						{@const active = selectedY > y && selectedY < y + height}
+						{@const colBefore = vis.bins[binning.current][index - 2]?.between
+							? collapsedBinHeight * 0.25
+							: 0}
+						{@const colAfter = vis.bins[binning.current][index]?.between
+							? collapsedBinHeight * 0.25
+							: 0}
+						{#if date != null}
+							<DateReveal
+								width={chartWidth}
+								{y}
+								{height}
+								{active}
+								{date}
+								binning={binning.current}
+								{colBefore}
+								{colAfter}
+							></DateReveal>
+						{/if}
+					{/each}
+				{/if}
+
 				{#each items as item}
 					{@const active = isActive(item)}
 					<rect
@@ -255,10 +286,18 @@
 					{strokeWidth}
 					start
 				/>
-				<!-- <line x2={chartWidth} y1={0} y2={0} stroke="currentColor" class="text-slate-300"></line> -->
 				{#if vis.bins[binning.current]}
-					{#each vis.bins[binning.current] as { y, between }}}
-						<line x2={chartWidth} y1={y} y2={y} stroke="currentColor" class="text-slate-300"></line>
+					{#each vis.bins[binning.current] as { y, between }, index}}
+						{@const height =
+							(vis.bins[binning.current][index + 1]?.y ?? chartHeight - collapsedBinHeight * 0.75) -
+							y}
+						<line
+							x2={chartWidth}
+							y1={y}
+							y2={y}
+							stroke="currentColor"
+							class="text-slate-300 pointer-events-none"
+						></line>
 						{#if between}
 							<Between
 								{chartWidth}
