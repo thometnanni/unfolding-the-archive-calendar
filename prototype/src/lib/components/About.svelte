@@ -3,30 +3,38 @@
 </script>
 
 <section class="bg-slate-200">
-	<article class="prose mx-4 py-10">
-		<h1>Unfolding the Archive</h1>
-		<p>
-			<em>
-				Unfolding the Archive: New Dimensions of Access to Born-digital Architecture Collections</em
-			>
-			is a research project conducted by Ania Molenda at Nieuwe Instituut between 2024-2025. It explored
-			how affordances of born-digital design records could improve access to contemporary architecture
-			collections in ways that are dynamic and networked, multimodal, and multivocal. Born-digital architecture
-			archives present unique opportunities to study and interpret the intertwined relationship between
-			built environment, digital cultures, and social change. However, due to technical limitations of
-			the proprietary software, most of their contents remain inaccessible to the public at large, posing
-			limits to both research and discovery. In the Dutch National Collection for Architecture and Urban
-			Planning, where this research was conducted, currently as much as 60% of the collection is inaccessible.
+	<article class="mx-2 py-2 pt-6 max-w-[640px] prose [&_h1]:my-3 [&_p]:my-1">
+		<h1 class="font-normal text-5xl">Unfolding the Archive</h1>
+		<p class="font-base">
+			<em>Unfolding the Archive</em> is a research project conducted by
+			<a href="https://www.aniamolenda.com/">Ania Molenda</a>
+			at <a href="https://nieuweinstituut.nl/en">Nieuwe Instituut</a>
+			between 2024-2025. It explores how metadata of born-digital design records can reveal new ways of
+			understanding and exploring architectural practice.
+		</p>
+		<p class="my-2">
+			This visualisation was created by
+			<a href="https://krisenstab.net/">Krisenstab</a> and displays 14 projects by
+			<a href="https://www.mvrdv.com/">MVRDV</a>. It shows the time of day drawings, images,
+			documents and other files have been created and emphasises periods of inactivity when set to
+			group files by year, month, or day.
 		</p>
 		<button
-			class="sticky top-4 bg-slate-700/10 rounded-full px-2 py-1 text-slate-700 text-xs -ml-1 backdrop-blur-xs"
+			class="sticky top-4 bg-slate-700/10 rounded-full px-2 py-1 my-4 text-slate-700 text-xs -ml-1 backdrop-blur-xs"
 			onclick={() => (showMore = !showMore)}
 		>
 			show {showMore ? 'less' : 'more'}
 		</button>
 
 		{#if showMore}
-			<p></p>
+			<p>
+				Born-digital architecture archives present unique opportunities to study and interpret the
+				intertwined relationship between built environment, digital cultures, and social change.
+				However, due to technical limitations of the proprietary software, most of their contents
+				remain inaccessible to the public at large, posing limits to both research and discovery. In
+				the Dutch National Collection for Architecture and Urban Planning, where this research was
+				conducted, currently as much as 60% of the collection is inaccessible.
+			</p>
 			<p>
 				Unfolding the Archive uses select properties of Computer Aided Design (CAD) Drawing (DWG)
 				and Drawing Interchange Format (DXF) as a dominant CAD file formats found in architecture
@@ -44,16 +52,10 @@
 				research with born digital architecture collections, making them more multivocal.
 			</p>
 			<p>
-				Drawing from the concept of generous interfaces, the three prototypes developed within this
-				project aim to open ways for researchers to study the history of contemporary design
-				practices and their social implications in ways that go beyond the structure of the
-				catalogue. Through a multimodal approach, each prototype focuses on a distinct digital
-				property: the creation date, the file layer structure, and the geometry information. These
-				different modes were selected to test if they can enable different readings supported by
-				different forms of data visualisation. This first collection of prototypes, which undeniably
-				excludes many aspects due to time and scope of the research, allows to make the complexity,
-				interconnectedness, non-linearity, and collaboration of the design process more visible and
-				open for interpretation.
+				Drawing from the concept of generous interfaces, <a
+					href="https://unfolding-the-archive-prototypes.krisenstab.ne">three prototypes</a
+				> have been initially developed within this project. After careful evaluation one of the prototypes
+				was selected, further refined and is now presented here.
 			</p>
 			<p>
 				The project has been supported by NWO Museum Grant in 2023. It was conducted by the Dutch
@@ -61,13 +63,8 @@
 				Molenda as the primary investigator and Costas Papadopulos of Maastricht University as
 				academic supervisor.
 			</p>
-			<p>
-				The prototypes were designed and developed by <a href="https://krisenstab.net/"
-					>krisenstab</a
-				> as part of the research project.
-			</p>
 
-			<h2>Methodology</h2>
+			<h2 class="text-3xl mb-1 font-normal">Methodology</h2>
 
 			<p>
 				<em>Unfolding the Archive</em> proposes three access prototypes created through iterative design
@@ -114,7 +111,7 @@
 				interpret for them.
 			</p>
 
-			<h3>Method step by step</h3>
+			<h3 class="text-2xl mb-1 font-normal">Method step by step</h3>
 
 			<p>
 				<strong> Creating an inventory </strong>
@@ -146,7 +143,7 @@
 
 			<p>
 				<strong> Extracting the metadata </strong>
-				was directly paired with <strong>distilling and testing possible modes of display</strong>.
+				was directly paired with distilling and testing possible modes of display.
 				Identifying relevant properties and the level of detail that could be meaningfully presented
 				were the guiding principle. It was clear that working with the selected file formats and
 				their metadata offerend multiple possibilities and needed to be narrowed down. Creating
@@ -160,7 +157,7 @@
 				archival material, with a different level of detail.
 			</p>
 			<p>
-				<strong> The Calendar View</strong> is based on temporal distribution of individual records displaying
+				<strong> The Calendar View </strong> is based on temporal distribution of individual records displaying
 				what types of records were cerated when and in what quantities. It provides insights in production
 				spikes, shows information on work culture (i.e. 9 to 5 work model, late night shifts), but also
 				project dynamics by indicating moments of inactivity (i.e. waiting for financing, consultations,
@@ -169,18 +166,17 @@
 				on archiving activity (i.e. moving large amounts of files to a new location).
 			</p>
 			<p>
-				<strong> Layers View </strong>allow the users to look 'under the hood' of the DWG and DXF
-				files without having to render them. They allow to compare the similarity of selected CAD
-				drawings by looking at the amount of recurring layers and the overlaps between the number of
-				geometries they contain. It shows how layers were named and structured, and allows to see
-				which layers contain most information (i.e. streets, buildings, floors, furniture, etc.),
-				which can help determine the scale and type of the drawing. This prototype also allows to
-				trace the occurrence of a specific layer across various files in a specific project, giving
-				the possibility to follow the elements that have been copied and repeated across various
-				files.
+				<strong> Layers View </strong> allow the users to look 'under the hood' of the DWG and DXF files
+				without having to render them. They allow to compare the similarity of selected CAD drawings by
+				looking at the amount of recurring layers and the overlaps between the number of geometries they
+				contain. It shows how layers were named and structured, and allows to see which layers contain
+				most information (i.e. streets, buildings, floors, furniture, etc.), which can help determine
+				the scale and type of the drawing. This prototype also allows to trace the occurrence of a specific
+				layer across various files in a specific project, giving the possibility to follow the elements
+				that have been copied and repeated across various files.
 			</p>
 			<p>
-				<strong>Geometries</strong> View aims to create an abstracted "fingerprint" of a project by the
+				<strong>Geometries </strong> View aims to create an abstracted "fingerprint" of a project by the
 				geometries contained in its CAD drawings. How representative are single geometries of one project?
 				How visually similar are shapes within one project and across projects?
 			</p>
