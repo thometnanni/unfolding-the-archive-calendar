@@ -53,7 +53,7 @@
 			</p>
 			<p>
 				Drawing from the concept of generous interfaces, <a
-					href="https://unfolding-the-archive-prototypes.krisenstab.ne">three prototypes</a
+					href="https://unfolding-the-archive-prototypes.krisenstab.net">three prototypes</a
 				> have been initially developed within this project. After careful evaluation one of the prototypes
 				was selected, further refined and is now presented here.
 			</p>
