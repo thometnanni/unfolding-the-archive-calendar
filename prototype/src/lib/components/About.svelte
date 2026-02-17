@@ -20,7 +20,7 @@
 			group files by year, month, or day.
 		</p>
 		<button
-			class="sticky top-4 bg-slate-700/10 rounded-full px-2 py-1 my-1 mb-4 text-slate-700 text-xs -ml-1 backdrop-blur-xs"
+			class="cursor-pointer sticky top-4 bg-slate-700/10 rounded-full px-2 py-1 my-1 mb-4 text-slate-700 text-xs -ml-1 backdrop-blur-xs"
 			onclick={() => (showMore = !showMore)}
 		>
 			show {showMore ? 'less' : 'more'}
