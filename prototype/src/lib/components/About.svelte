@@ -3,8 +3,8 @@
 </script>
 
 <section class="bg-slate-200">
-	<article class="mx-2 py-2 pt-6 max-w-[640px] prose [&_h1]:my-3 [&_p]:my-1">
-		<h1 class="font-normal text-5xl">Unfolding the Archive</h1>
+	<article class="mx-2 py-1 text-black max-w-[640px] prose leading-tight [&_h1]:my-1 [&_p]:my-2">
+		<h1 class="font-normal text-4xl">Unfolding the Archive</h1>
 		<p class="font-base">
 			<em>Unfolding the Archive</em> is a research project conducted by
 			<a href="https://www.aniamolenda.com/">Ania Molenda</a>
@@ -20,7 +20,7 @@
 			group files by year, month, or day.
 		</p>
 		<button
-			class="sticky top-4 bg-slate-700/10 rounded-full px-2 py-1 my-4 text-slate-700 text-xs -ml-1 backdrop-blur-xs"
+			class="sticky top-4 bg-slate-700/10 rounded-full px-2 py-1 my-1 mb-4 text-slate-700 text-xs -ml-1 backdrop-blur-xs"
 			onclick={() => (showMore = !showMore)}
 		>
 			show {showMore ? 'less' : 'more'}
@@ -58,7 +58,20 @@
 				was selected, further refined and is now presented here.
 			</p>
 			<p>
-				Unfolding the Archive looked at how select properties of popular Computer Aided Design (CAD) files – Drawing (DWG) and Drawing Interchange Format (DXF) can be used for new forms of access to architecture archives based on their embedded metadata. The resulting prototype understands born digital archives as data, not a collection of individual objects. They focus on visualizing the relationships between archival objects, finding ways to  contextualise the archives by providing insights into the structure and unique characteristics of individual collections, that are impossible to see with a naked eye and without specialist technical knowledge. On the most direct level the research aimed to stimulate users to engage with born digital collections on the level of relations and help them to identify research questions prior to requesting files. It also experimented with different ways to create new data-driven insights that would otherwise only be available to researchers with highly technical knowledge or significant funding. Through that it would like to contribute to the democratisation of research with born digital architecture collections, inviting more multivocal approaches to research.
+				Unfolding the Archive looked at how select properties of popular Computer Aided Design (CAD)
+				files – Drawing (DWG) and Drawing Interchange Format (DXF) can be used for new forms of
+				access to architecture archives based on their embedded metadata. The resulting prototype
+				understands born digital archives as data, not a collection of individual objects. They
+				focus on visualizing the relationships between archival objects, finding ways to
+				contextualise the archives by providing insights into the structure and unique
+				characteristics of individual collections, that are impossible to see with a naked eye and
+				without specialist technical knowledge. On the most direct level the research aimed to
+				stimulate users to engage with born digital collections on the level of relations and help
+				them to identify research questions prior to requesting files. It also experimented with
+				different ways to create new data-driven insights that would otherwise only be available to
+				researchers with highly technical knowledge or significant funding. Through that it would
+				like to contribute to the democratisation of research with born digital architecture
+				collections, inviting more multivocal approaches to research.
 			</p>
 			<p>
 				The project has been supported by NWO Museum Grant in 2023. It was conducted by the Dutch
